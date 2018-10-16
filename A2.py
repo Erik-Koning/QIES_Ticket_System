@@ -6,25 +6,31 @@ import os.path
 import re
 
 user_type = 0 # 0 -> not loggedin | 1 -> agent | 2 -> planner
-validServicesFile = "vServices.txt"             #file name for our valid services
-summaryFile = "transactionSummaryFile.txt"      #
-pendingSummaryFile = []
-pendingValidServices = []
+validServicesFile = "vServices.txt"             #file name for valid services file
+summaryFile = "transactionSummaryFile.txt"      #file name for transaction summary file
+pendingSummaryFile = []                         #pending transaction summary file
+pendingValidServices = []                       #pending valid services file
 canceledTickets = 0 #number of tickets an agent has canceled in the current session
 changedTickets = 0  #number of tickets an agent has changed in the current session
 
+#adds a service to the pending services file array,
+#to be added to the file on logout
 def addToPendingServicesList(serviceNum):
     global pendingValidServices
     pendingValidServices.append(str(serviceNum))
 
+#writes the new services to the valid services file.
 def writePendingServicesList():
     global pendingValidServices
     global validServicesFile
-    servicesFile = open(validServicesFile,"a")
-    servicesFile.write('\n'.join(pendingValidServices))
-    servicesFile.close()
+    #open the services file with the "append" argument so older services 
+    #persist in the file after logout and re-login
+    sF = open(validServicesFile,"a")
+    sF.write('\n'.join(pendingValidServices))
+    sF.close()
     return
 
+#adds transaction details to pending transaction summary array
 def addToPendingSummaryFile(transCode, sNum1, numTickets, sNum2, sName, sDate):
     global pendingSummaryFile
     #create the transaction summary line
@@ -32,28 +38,19 @@ def addToPendingSummaryFile(transCode, sNum1, numTickets, sNum2, sName, sDate):
     pendingSummaryFile.append(line)
     return
 
+#writes the pending summary text file
 def writePendingSummaryFile():
     global summaryFile
     global pendingSummaryFile
-    #Create a blank summaryFile
+    #opens summary file with argument "w+" so a blank summaryFile is created 
     #if it already exists it is overwritten with a blank one
     sF = open(summaryFile,"w+")
     sF.write('\n'.join(pendingSummaryFile))
     sF.close()
     return
 
-def removeValidService(serviceNum):
-    sF = open(validServicesFile, "r")
-    lines = sF.readlines()
-    sF.close()
-
-    sF = open(validServicesFile, "w")
-    for line in lines:
-        if line != serviceNum:
-            sF.write(line)
-    sF.close()
-    return
-
+#returns false for all dates that are outside a valid range
+#true if a valid date
 def validServiceDate(date):
     #check if the date is not the right lenght or contains a letter
     if len(str(date)) != 8 or bool(re.search('[a-zA-Z]', str(date))):
@@ -78,6 +75,24 @@ def validServiceDate(date):
         return False
     return True
 
+#returns true if the passed service number (as a string), 
+#is in the valid services file, false otherwise
+def isValidService(service):
+    global validServicesFile
+    servicesFile = open(validServicesFile,"r")
+    lines = servicesFile.readlines()
+    for line in lines:
+        if service == line:
+            servicesFile.close()
+            return True
+    servicesFile.close()
+    return False
+
+#TODO: number of tickets available for that service number
+def ticketsAvailable(serviceNum):
+    return 9999
+
+#waits for user to type login, then goes to login() function
 def wait_for_login():
     while True:
         login_command = input("").lower()
@@ -87,6 +102,7 @@ def wait_for_login():
             print("You cannot do other things without first logging in")
     return login()
 
+#sets up new login environment and asks who the user is
 def login():
     global user_type
     global validServicesFile
@@ -122,8 +138,9 @@ def login():
             print("Login successfully as planner")
             return user_type
         else:
-            print("unknown username") # no way to get here
+            print("unknown username")
 
+#Adds a service to the services list after successful creation, and subsequent logout
 def createService():
     if user_type != 2:
         print("Invalid operation for user")
@@ -152,6 +169,7 @@ def createService():
     addToPendingSummaryFile("CRE", serviceNum, "xxxx", "xxxxx", serviceName, serviceDate)
     return
 
+#
 def deleteService():
     if user_type == 1:
         print("Invalid operation for user")
@@ -164,7 +182,6 @@ def deleteService():
             break
         else:
             print("Invalid service number")
-
     while True:
         serviceName = input("What is the service name?")
         if len(serviceName) < 3 or len(serviceName) > 39:
@@ -172,11 +189,21 @@ def deleteService():
         else:
             break
 
-    removeValidService(serviceNum)
+    #finds the service number in the valid services file and
+    #re-writes the services file without the one being removed
+    sF = open(validServicesFile, "r")       #open file for reading
+    lines = sF.readlines()                  #saves lines
+    sF.close()                                  
+    sF = open(validServicesFile, "w")       #open file for writing
+    for line in lines:                      
+        if line != serviceNum:              #write line if not the one to delete
+            sF.write(line)
+    sF.close()
+
     addToPendingSummaryFile("DEL", serviceNum, "xxxx", "xxxxx", serviceName, serviceDate)
     return
 
-
+#sells a umber tickets for a valid service number
 def sellTicket():
     while True:
         serviceNum = input("What is the service number?")
@@ -186,7 +213,7 @@ def sellTicket():
             break
     while True:
         numTickets = int(input("How many tickets are being sold?"))
-        if bool(re.search('[a-zA-Z]', str(numTickets))) or numTickets < 0 or ticketsAvailable(serviceNum) < numTickets:
+        if bool(re.search('[a-zA-Z]', str(numTickets))) or numTickets < 0 or ticketsAvailable(serviceNum) < numTickets or len(str(numTickets)) > 4:
             print("Invalid number of tickets")
         else:
             break
@@ -194,6 +221,7 @@ def sellTicket():
     addToPendingSummaryFile("SEL", serviceNum, numTickets, "xxxxx", "xxxxxx", "xxxxxxxx")
     return
 
+#cancels a number of tickets for a service
 def cancelTicket():
     global canceledTickets
     global user_type
@@ -219,6 +247,7 @@ def cancelTicket():
     addToPendingSummaryFile("CAN", serviceNum, numTickets, "xxxxx", "xxxxxx", "xxxxxxxx")
     return  
 
+#exchanges a number of tickets from one service number ot another
 def changeTicket():
     global changedTickets
     global user_type
@@ -253,6 +282,7 @@ def changeTicket():
     addToPendingSummaryFile("CHG", currentService, numTickets, newService, "xxxxxx", "xxxxxxxx")
     return
 
+#logs user out of current session
 def logout():
     global user_type
     addToPendingSummaryFile("EOS", "xxxxx", "xxxx", "xxxxx", "xxxxxx", "xxxxxxxx")
@@ -266,23 +296,11 @@ def logout():
     print("Logout successfully")
     return
 
-
-def isValidService(service):
-    global validServicesFile
-    servicesFile = open(validServicesFile,"r")
-    lines = servicesFile.readlines()
-    for line in lines:
-        if service == line:
-            return True
-    servicesFile.close()
-    return False
-
-def ticketsAvailable(serviceNum):
-    return 9999
-
+#QIES interface loop
 def main():
     global user_type
 
+    #infinite loop
     while True:
         print("QIES Interface - Team DJANGO")
         wait_for_login()
