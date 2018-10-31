@@ -3,7 +3,9 @@
 #October 2018
 
 import os.path
+import os           #to enable folders to be made
 import re
+import sys          #to check passed argument to program
 
 user_type = 0 # 0 -> not loggedin | 1 -> agent | 2 -> planner
 validServicesFile = "vServices.txt"             #file name for valid services file
@@ -45,6 +47,27 @@ def writePendingSummaryFile():
     #opens summary file with argument "w+" so a blank summaryFile is created 
     #if it already exists it is overwritten with a blank one
     sF = open(summaryFile,"w+")
+    sF.write('\n'.join(pendingSummaryFile))
+    sF.close()
+    return
+
+#writes the pending summary text file
+def writePendingSummaryFileTestingMode():
+    global testNum
+    global pendingSummaryFile
+    global inputTestFile
+
+    summaryFile = inputTestFile.replace("input","output")
+    #opens summary file with argument "w+" so a blank summaryFile is created 
+    #if it already exists it is overwritten with a blank one
+
+    #make a folder for test case catagory number
+    catagoryNum = int(re.search(r'\d+', headline).group())
+    outputDirName = str(catagoryNum)
+    if not os.path.exists(outputDirName):
+        os.makedirs(outputDirName)
+
+    sF = open("./Outputs/"+catagoryNum+"/"+summaryFile,"w+")
     sF.write('\n'.join(pendingSummaryFile))
     sF.close()
     return
@@ -113,7 +136,7 @@ def login():
     servicesFile = open(validServicesFile,"a+")
     servicesFile.close()
 
-    #initialize variables
+    #initialize variables to be empty on login
     global pendingSummaryFile
     global pendingValidServices
     global canceledTickets
@@ -282,6 +305,21 @@ def changeTicket():
     addToPendingSummaryFile("CHG", currentService, numTickets, newService, "xxxxxx", "xxxxxxxx")
     return
 
+#logs user out of current session but saves unique transaction summary for this test case
+def testLogout():
+    global user_type
+    addToPendingSummaryFile("EOS", "xxxxx", "xxxx", "xxxxx", "xxxxxx", "xxxxxxxx")
+    
+    #we merge these lists at the end becuase the added services in this session
+    #cannot be accessed untill a new session starts. And the summary file is not
+    #finalized until after official logout
+    writePendingServicesList()
+    writePendingSummaryFileTestingMode()
+
+    user_type = 0
+    print("Logout successfully")
+    return
+
 #logs user out of current session
 def logout():
     global user_type
@@ -299,14 +337,42 @@ def logout():
 #QIES interface loop
 def main():
     global user_type
+    global numberCommands
+    global commandNumber
+    global inputTestFile
+    commandNumber = 0
+    numberCommands = 0
+
+    #check if passed a testing file
+    if(len(sys.argv) == 2 and ".txt" in str(sys.argv[1])):
+        inputTestFile = sys.argv[1]
+        print("\n****\nThis program has entered testing mode, using test file: {word}\n****".format(word=inputTestFile))
+        testMode = True
+        #We iterate the test number every time there is a login
+        outputDirName = "Outputs"
+        if not os.path.exists(outputDirName):
+            os.makedirs(outputDirName)
+        #open test file and then close after stripping new line characters
+        with open(inputTestFile) as f: testLines = [line.rstrip('\n') for line in f]
+        numberCommands = len(lines)
 
     #infinite loop
     while True:
+        if commandNumber > numberCommands:
+            print("All test commands done for test case: {word}".format(word=inputTestFile))
+            exit()
         print("\nQIES Interface - Team DJANGO")
         wait_for_login()
 
         while True:
-            service = input("Type a command (sell ticket, cancel ticket, change ticket, create service, delete service, or logout):\n").lower()
+            if not testMode:
+                service = input("Type a command (sell ticket, cancel ticket, change ticket, create service, delete service, or logout):\n").lower()
+            else:
+                if commandNumber > numberCommands:
+                    print("All test commands done for test case: {word}".format(word=inputTestFile))
+                    exit()
+                service = testLines[testNum]
+                commandNumber += 1
             if service == "login":
                 if user_type == 1:
                     print("Already logged in as Agent")
@@ -327,7 +393,11 @@ def main():
             elif service == "delete service":
                 deleteService()
             elif service == "logout":
-                logout()
+                if (testMode):
+                    #logout but saving a unique trans sum file
+                    testLogout()
+                else:
+                    logout()
                 break
             elif service == "shutdown" or service == "exit" or service == "end":
                 return

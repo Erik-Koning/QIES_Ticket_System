@@ -35,7 +35,7 @@ def testcase(dir):
     services_file = pretext + "_services_file.txt"
 
     #run the test case using the files
-    os.system('python a2.py ' + services_file + ' ' + input_file) #havnt tested
+    os.system('python a2.py ' + input_file) #havnt tested
 
     #compare the result file with the files
     #sample result directory result_path + 1.Login + 1.1 + results.txt
@@ -57,8 +57,6 @@ def runTesting(dir):
             testcase(dir)
             break
 
-
 #printFiles(test_path)
 runTesting(test_path)
-
 #print output file for all of testing
