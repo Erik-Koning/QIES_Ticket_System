@@ -62,12 +62,13 @@ def writePendingSummaryFileTestingMode():
     #if it already exists it is overwritten with a blank one
 
     #make a folder for test case catagory number
-    catagoryNum = int(re.search(r'\d+', headline).group())
-    outputDirName = str(catagoryNum)
+    catagoryNum = int(re.findall("\d+", summaryFile)[0])
+    outputDirName = "Outputs/" + str(catagoryNum)
+
     if not os.path.exists(outputDirName):
         os.makedirs(outputDirName)
 
-    sF = open("./Outputs/"+catagoryNum+"/"+summaryFile,"w+")
+    sF = open(outputDirName+"/"+summaryFile,"w+")
     sF.write('\n'.join(pendingSummaryFile))
     sF.close()
     return
@@ -141,13 +142,20 @@ def login():
     global pendingValidServices
     global canceledTickets
     global changedTickets
+    global testMode
+    global commandNumber
+    global testLines
     pendingSummaryFile = []
     pendingValidServices = []
     canceledTickets = 0
     changedTickets =0
 
     while True:
-        userInput = str(input("Please enter \"agent\" or \"planner\" to login:\n")).lower()
+        if testMode:
+            userInput = testLines[commandNumber]
+            commandNumber += 1
+        else:
+            userInput = str(input("Please enter \"agent\" or \"planner\" to login:\n")).lower()
         if userInput == "agent":
             user_type = 1 # set user_type to agent
             addToPendingSummaryFile("Agent Login", "xxxxx", "xxxx", "xxxxx", "xxxxxx", "xxxxxxxx")
@@ -340,6 +348,10 @@ def main():
     global numberCommands
     global commandNumber
     global inputTestFile
+    global testMode
+    global testLines
+    user_type = 0
+    testMode = False
     commandNumber = 0
     numberCommands = 0
 
@@ -354,7 +366,7 @@ def main():
             os.makedirs(outputDirName)
         #open test file and then close after stripping new line characters
         with open(inputTestFile) as f: testLines = [line.rstrip('\n') for line in f]
-        numberCommands = len(lines)
+        numberCommands = len(testLines)
 
     #infinite loop
     while True:
@@ -362,21 +374,25 @@ def main():
             print("All test commands done for test case: {word}".format(word=inputTestFile))
             exit()
         print("\nQIES Interface - Team DJANGO")
-        wait_for_login()
+
+        if (not testMode):
+            wait_for_login()
 
         while True:
-            if not testMode:
-                service = input("Type a command (sell ticket, cancel ticket, change ticket, create service, delete service, or logout):\n").lower()
-            else:
-                if commandNumber > numberCommands:
+            if testMode:
+                if commandNumber >= numberCommands:
                     print("All test commands done for test case: {word}".format(word=inputTestFile))
                     exit()
-                service = testLines[testNum]
+                service = testLines[commandNumber]
                 commandNumber += 1
+            else:
+                service = input("Type a command (sell ticket, cancel ticket, change ticket, create service, delete service, or logout):\n").lower()
             if service == "login":
-                if user_type == 1:
+                if testMode and user_type == 0:
+                    login()
+                elif user_type == 1:
                     print("Already logged in as Agent")
-                if user_type == 2:
+                elif user_type == 2:
                     print("Already logged in as Planner")
                 else:
                     print("Error: UNKNOWN USER. Already logged in")
