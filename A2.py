@@ -302,7 +302,7 @@ def main():
 
     #infinite loop
     while True:
-        print("QIES Interface - Team DJANGO")
+        print("\nQIES Interface - Team DJANGO")
         wait_for_login()
 
         while True:
@@ -329,7 +329,7 @@ def main():
             elif service == "logout":
                 logout()
                 break
-            elif service == "shutdown":
+            elif service == "shutdown" or service == "exit" or service == "end":
                 return
 
 main()
