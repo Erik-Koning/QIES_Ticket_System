@@ -58,14 +58,14 @@ def testcase(fullPath):
     #sample result directory result_path + 1.Login + 1.1 + results.txt
     result = filecmp.cmp(expectedOutputFilePath, outputFilePath)
     
-    reportResults.write("Test: " + testId + "," + str(result))
+    reportResults.write("Test: " + testId + "," + str(result) + "Put what info on what is different here," + "\n")
     return
 
 #run all tests for test files below the argument dir
 def runTesting(testsPath):
     global reportResults
 
-    testReultsPath = rootDir + "\\" + "testReults.csv"
+    testReultsPath = rootDir + "\\" + "Test_Reults.csv"
     reportResults = open(testReultsPath,"w+")
     reportResults.write("Test,Result,Discription\n")
     for root, dirs, files in os.walk(testsPath):
