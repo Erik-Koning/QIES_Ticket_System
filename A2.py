@@ -56,15 +56,18 @@ def writePendingSummaryFileTestingMode():
     global testNum
     global pendingSummaryFile
     global inputTestFile
+    global testId
 
     summaryFile = inputTestFile.replace("input","output")
     #opens summary file with argument "w+" so a blank summaryFile is created 
     #if it already exists it is overwritten with a blank one
 
-    #make a folder for test case catagory number
-    catagoryNum = int(re.findall("\d+", summaryFile)[0])
-    outputDirName = "Outputs/" + str(catagoryNum)
+    #check to see if we are dealing with a full path, if we are get summary file relative path name
+    if "\\" in summaryFile:
+        summaryFile = summaryFile.rsplit('\\',1)[1]
 
+    #make a folder for test ID number
+    outputDirName = "Outputs/" + testId
     if not os.path.exists(outputDirName):
         os.makedirs(outputDirName)
 
@@ -118,12 +121,25 @@ def isValidService(service):
 def ticketsAvailable(serviceNum):
     return 9999
 
+def initVariables():
+    #initialize variables to be empty on login
+    global pendingSummaryFile
+    global pendingValidServices
+    global canceledTickets
+    global changedTickets
+    pendingSummaryFile = []
+    pendingValidServices = []
+    canceledTickets = 0
+    changedTickets =0
+
 #waits for user to type login, then goes to login() function
 def wait_for_login():
     while True:
         login_command = input("").lower()
         if login_command == "login":
             break
+        elif login_command == "shutdown" or service == "exit" or service == "end" or service == "q" or service == "quit":
+            exit()
         else:
             print("You cannot do other things without first logging in")
     return login()
@@ -132,25 +148,15 @@ def wait_for_login():
 def login():
     global user_type
     global validServicesFile
+    global testMode
+    global commandNumber
+    global testLines
     #Check the valid services file exists, if it does not
     #an empty txt file is created to be populated
     #a+ Opens a file for both appending and reading.
     #if the file does not exist, it creates a new file for reading and writing
     servicesFile = open(validServicesFile,"a+")
     servicesFile.close()
-
-    #initialize variables to be empty on login
-    global pendingSummaryFile
-    global pendingValidServices
-    global canceledTickets
-    global changedTickets
-    global testMode
-    global commandNumber
-    global testLines
-    pendingSummaryFile = []
-    pendingValidServices = []
-    canceledTickets = 0
-    changedTickets =0
 
     while True:
         if testMode:
@@ -160,14 +166,12 @@ def login():
             userInput = str(input("Please enter \"agent\" or \"planner\" to login:\n")).lower()
         if userInput == "agent":
             user_type = 1 # set user_type to agent
-            addToPendingSummaryFile("Agent Login", "xxxxx", "xxxx", "xxxxx", "xxxxxx", "xxxxxxxx")
-            addToPendingSummaryFile("", "", "", "", "", "")
+            #addToPendingSummaryFile("Agent Login", "xxxxx", "xxxx", "xxxxx", "xxxxxx", "xxxxxxxx")
             print("Login successfully as agent")
             return user_type
         elif userInput == "planner":
             user_type = 2 # set user_type to planner
-            addToPendingSummaryFile("Planner Login", "xxxxx", "xxxx", "xxxxx", "xxxxxx", "xxxxxxxx")
-            addToPendingSummaryFile("", "", "", "", "", "")
+            #addToPendingSummaryFile("Planner Login", "xxxxx", "xxxx", "xxxxx", "xxxxxx", "xxxxxxxx")
             print("Login successfully as planner")
             return user_type
         else:
@@ -352,6 +356,7 @@ def main():
     global inputTestFile
     global testMode
     global testLines
+    global testId
     user_type = 0
     testMode = False
     commandNumber = 0
@@ -359,9 +364,14 @@ def main():
 
     #check if passed a testing file
     if(len(sys.argv) == 2 and ".txt" in str(sys.argv[1])):
-        inputTestFile = sys.argv[1]
-        print("\n****\nThis program has entered testing mode, using test file: {word}\n****".format(word=inputTestFile))
         testMode = True
+        inputTestFile = sys.argv[1]
+        #get testId number of the input test file
+        if "\\" in inputTestFile:
+            testId = inputTestFile.rsplit('\\',1)[1]
+            testId = testId.rsplit('_',4)
+            testId= str(testId[1]) + "." + str(testId[2])
+        print("\n*TESTING MODE*, using test file ID: {word}\n".format(word=testId))
         #We iterate the test number every time there is a login
         outputDirName = "Outputs"
         if not os.path.exists(outputDirName):
@@ -369,29 +379,41 @@ def main():
         #open test file and then close after stripping new line characters
         with open(inputTestFile) as f: testLines = [line.rstrip('\n') for line in f]
         numberCommands = len(testLines)
-    if(len(sys.argv) > 2):
-        print("Error: Can only accept 1 test file, *running in non testing mode*")
 
-    #infinite loop
+    elif(len(sys.argv) > 2):
+        print("Error: Can only accept 1 test file, *running in non testing mode*\n")
+
+    #infinite program user input loop
     while True:
+        initVariables()
         if commandNumber > numberCommands:
-            print("All test commands done for test case: {word}".format(word=inputTestFile))
+            print("All test commands done for test case Id: {word}\n".format(word=testId))
             exit()
-        print("\nQIES Interface - Team DJANGO")
+        print("QIES Interface - Team DJANGO")
 
         if (not testMode):
             wait_for_login()
 
         while True:
+            #get command
             if testMode:
                 if commandNumber >= numberCommands:
-                    print("All test commands done for test case: {word}".format(word=inputTestFile))
+                    print("All test commands done for test case Id: {word}".format(word=testId))
                     exit()
-                service = testLines[commandNumber]
+                service = testLines[commandNumber].lower()
                 commandNumber += 1
             else:
                 service = input("Type a command (sell ticket, cancel ticket, change ticket, create service, delete service, or logout):\n").lower()
-            if service == "login":
+            
+            #command switch
+            if service == "logout":
+                if (testMode):
+                    #logout but saving a unique trans sum file
+                    testLogout()
+                else:
+                    logout()
+                break
+            elif service == "login":
                 if testMode and user_type == 0:
                     login()
                 elif user_type == 1:
@@ -412,14 +434,7 @@ def main():
                 createService()
             elif service == "delete service":
                 deleteService()
-            elif service == "logout":
-                if (testMode):
-                    #logout but saving a unique trans sum file
-                    testLogout()
-                else:
-                    logout()
-                break
-            elif service == "shutdown" or service == "exit" or service == "end":
-                return
+            elif service == "shutdown" or service == "exit" or service == "end" or service == "q" or service == "quit":
+                exit()
 
 main()

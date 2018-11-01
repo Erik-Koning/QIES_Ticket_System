@@ -1,7 +1,7 @@
 
-
-import os, sys
+import os, os.path, sys
 import filecmp
+from shutil import copy2
 
 
 results = ""
@@ -9,9 +9,9 @@ total_tests = 0
 correct_tests = 0
 
 
-test_path = os.getcwd() + '\\Testing'
-result_path = os.getcwd() + '\\Results'
-
+testsPath = os.getcwd() + '\\Testing'
+resultPath = os.getcwd() + '\\Outputs'
+rootDir = os.getcwd()
 
 def writeOutputFile():
     file = os.getcwd() + "\\Master_Results.txt"
@@ -30,47 +30,54 @@ def printFiles(dir):
             printFiles(dir + "/" + file)
 
 
-def testcase(dir):
+def testcase(fullPath):
     global total_tests, correct_tests
+    global reportResults
 
     #parse out the directory numberes to use them for file location
-    end_of_dir = dir.rsplit('/',1)[1]
-    type, number = end_of_dir.rsplit('.', 1)
-    pretext = "test_case_" + type + "_" + number
+    dirOfTest = fullPath.rsplit('\\',1)[0]
+    inputTest = fullPath.rsplit('\\',1)[1]
 
-    #collect the three files
-    input_file = pretext + "_input_file.txt"
-    output_transaction_summary_file = pretext + "_output_transaction_summary.txt"
-    services_file = pretext + "_services_file.txt"
+    pretext = inputTest.rsplit('_',2)[0]
+
+    outputFile = inputTest.replace("input","output")
+    expectedOutputFile = pretext + "_ouput_transaction_summary.txt"
+    servicesList = pretext + "_services_file.txt"
+    testId = fullPath.rsplit('\\',2)[1]
+    outputFilePath = rootDir + "\\" + "Outputs" + "\\" + testId + "\\" + outputFile
+    expectedOutputFilePath = dirOfTest + "\\" + expectedOutputFile
+
+    #move services list to root for front end to use for this test
+    #This will overwrite the current valid services list
+    copy2(dirOfTest + "\\" + servicesList, rootDir)
 
     #run the test case using the files
-    os.system('python a2.py ' + input_file) #havnt tested
+    os.system('python a2.py ' + fullPath) #havnt tested
 
     #compare the result file with the files
     #sample result directory result_path + 1.Login + 1.1 + results.txt
-    test_type = dir.rsplit('/',2)[1]
-    result_file = result_path + "/" + test_type + "/" + end_of_dir + "/results.txt"
-    result = filecmp.cmp(output_transaction_summary_file, result_file)
+    result = filecmp.cmp(expectedOutputFilePath, outputFilePath)
+    
+    reportResults.write("Test: " + testId + "," + str(result))
+    return
 
-    #report on results
-    total_tests += 1
-    global results
-    if result:
-        results += dir + " \t 1 \n"
-        correct_tests += 1
-    else:
-        results += dir + " \t 0 \n"
+#run all tests for test files below the argument dir
+def runTesting(testsPath):
+    global reportResults
 
+    testReultsPath = rootDir + "\\" + "testReults.csv"
+    reportResults = open(testReultsPath,"w+")
+    reportResults.write("Test,Result,Discription\n")
+    for root, dirs, files in os.walk(testsPath):
+        for f in files:
+            #it is an input test "flie"
+            if "input_f" in f:
+                fullPath = os.path.join(root,f)
+                testcase(fullPath)
 
-def runTesting(dir):
-    for file in os.listdir(dir):
-        if os.path.isdir(dir + "/" + file):
-            runTesting(dir + "/" + file)
-        else:
-            testcase(dir)
-            break
-
+    reportResults.close()
+    return
 #printFiles(test_path)
-runTesting(test_path)
+runTesting(testsPath)
 #print output file for all of testing
 writeOutputFile()
