@@ -81,11 +81,13 @@ def validServiceDate(date):
         return False
     #cretae a numeric list of the date values
     dL = [int(x) for x in str(date)]
-    if dL[0] > 2 or dL[0] < 1:
+    if dL[0] > 2 or dL[0] < 1:                                              #check illegal years (X000MMDD)
         return False
-    if dL[4] > 1 or dL[4] < 0 or (dL[4] == 1 and dL[5] > 2):
+    if dL[0] == 1 and (dL[1] < 9 or (dL[1] == 9 and dL[2] < 8)):            #check illegal years in 20th centry (19XXMMDD)
         return False
-    if dL[6] > 3 or dL[6] < 0 or (dL[6] == 3 and dL[7] > 1):
+    if dL[4] > 1 or dL[4] < 0 or (dL[4] == 1 and dL[5] > 2) or (dL[4] == 0 and dL[5] == 0):     #check illegal monthes (YYYYXXDD)
+        return False
+    if dL[6] > 3 or dL[6] < 0 or (dL[6] == 3 and dL[7] > 1) or (dL[6] == 0 and dL[7] == 0):      #check illegal day (YYYYMMXX)
         return False
     #illegal day for respective month value
     #Jan, Mar, May, July, Aug, Oct, Dec, can not have more than 31 days

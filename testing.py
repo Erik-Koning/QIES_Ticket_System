@@ -8,10 +8,19 @@ results = ""
 total_tests = 0
 correct_tests = 0
 
-#TODO - change to dynamic paths
-test_path = "C:/Users/K.S/Desktop/CISC327/CISC327_A3/CMPE 327 Assignment 1/CMPE 327 Project/Testing"
-result_path = "C:/Users/K.S/Desktop/CISC327/CISC327_A3/CMPE 327 Assignment 1/CMPE 327 Project/Results"
 
+test_path = os.getcwd() + '\\Testing'
+result_path = os.getcwd() + '\\Results'
+
+
+def writeOutputFile():
+    file = os.getcwd() + "\\Master_Results.txt"
+    global results
+    results += "\n\nCorrect Test Cases: " + str(correct_tests) + "/" + str(total_tests)
+
+    f = open(file, "w")
+    f.write(results)
+    f.close()
 
 def printFiles(dir):
     for file in os.listdir(dir):
@@ -45,8 +54,12 @@ def testcase(dir):
 
     #report on results
     total_tests += 1
+    global results
     if result:
+        results += dir + " \t 1 \n"
         correct_tests += 1
+    else:
+        results += dir + " \t 0 \n"
 
 
 def runTesting(dir):
@@ -60,3 +73,4 @@ def runTesting(dir):
 #printFiles(test_path)
 runTesting(test_path)
 #print output file for all of testing
+writeOutputFile()
