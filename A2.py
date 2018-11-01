@@ -138,7 +138,7 @@ def wait_for_login():
         login_command = input("").lower()
         if login_command == "login":
             break
-        elif login_command == "shutdown" or service == "exit" or service == "end" or service == "q" or service == "quit":
+        elif login_command == "shutdown" or login_command == "exit" or login_command == "end" or login_command == "q" or login_command == "quit":
             exit()
         else:
             print("You cannot do other things without first logging in")
