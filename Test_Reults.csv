@@ -1,0 +1,40 @@
+Test,Result,Discription
+Test: 1.1,True,
+Test: 1.2,True,
+Test: 1.3,True,
+Test: 1.4,True,
+Test: 1.5,True,
+Test: 1.6,False,--- Expected+++ Resultant@@ -1 +1,2 @@ EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx+EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 2.1,True,
+Test: 2.2,True,
+Test: 2.3,False,--- Expected+++ Resultant@@ -1,2 +1,2 @@-CRE 10000 0 00000 aaa 19800101+CRE 10000 xxxx xxxxx aaa 19800101 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 2.4,False,--- Expected+++ Resultant@@ -1,2 +1,2 @@-CRE 10001 0 00000 aab 19800101+CRE 10001 xxxx xxxxx aab 19800101 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 2.5,False,--- Expected+++ Resultant@@ -1,2 +1,2 @@-CRE 10002 0 00000 aac 19800101+CRE 10002 xxxx xxxxx aac 19800101 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 2.6,False,--- Expected+++ Resultant@@ -1,2 +1,2 @@-CRE 10003 0 00000 aad 19800101+CRE 10003 xxxx xxxxx aad 19800101 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 3.1,False,--- Expected+++ Resultant@@ -1 +0,0 @@-EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 3.2,True,
+Test: 3.3,False,--- Expected+++ Resultant@@ -1,2 +1,2 @@-DEL 10001 0 00000 aaa 00000000+DEL 10001 xxxx xxxxx aaa xxxxxxxx EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 3.4,False,--- Expected+++ Resultant@@ -1,2 +1 @@-DEL 10001 0 00000 aaa 00000000 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 3.5,False,--- Expected+++ Resultant@@ -1,2 +1,2 @@-DEL 10001 0 00000 aaa 00000000+DEL 10001 xxxx xxxxx aaa xxxxxxxx EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 3.6,False,--- Expected+++ Resultant@@ -1,2 +1 @@-DEL 10001 0 00000 aaa 00000000-EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx+DEL 10001 xxxx xxxxx aaa xxxxxxxx
+Test: 3.7,False,--- Expected+++ Resultant@@ -1,2 +1 @@-DEL 10001 0 00000 aaa 00000000-EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx+DEL 10001 xxxx xxxxx aaa xxxxxxxx
+Test: 3.8,False,--- Expected+++ Resultant@@ -1,2 +1 @@-DEL 10001 0 00000 aaa 00000000-EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx+DEL 10001 xxxx xxxxx aaa xxxxxxxx
+Test: 4.1,False,--- Expected+++ Resultant@@ -1 +0,0 @@-EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 4.2,False,--- Expected+++ Resultant@@ -1,2 +1 @@-SEL 10001 1 00000 0 00000000 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 4.3,False,--- Expected+++ Resultant@@ -1,2 +1 @@-SEL 10001 1 00000 0 00000000 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 4.4,False,--- Expected+++ Resultant@@ -1,2 +1 @@-SEL 10001 1 00000 0 00000000 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 4.5,False,--- Expected+++ Resultant@@ -1,2 +1 @@-SEL 10001 1 00000 0 00000000 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 5.1,False,--- Expected+++ Resultant@@ -1 +0,0 @@-EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 5.2,False,--- Expected+++ Resultant@@ -1,2 +1 @@-CAN 10001 1 0000 0 00000000 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 5.3,False,--- Expected+++ Resultant@@ -1,2 +1,2 @@-CAN 10001 1 0000 0 00000000+CAN 10001 1 xxxxx xxxxxx xxxxxxxx EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 5.4,False,--- Expected+++ Resultant@@ -1,2 +1 @@-CAN 10001 1 0000 0 00000000 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 5.5,False,--- Expected+++ Resultant@@ -1,2 +1 @@-CAN 10001 1 0000 0 00000000 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 5.6,False,--- Expected+++ Resultant@@ -1,4 +1 @@-CAN 10001 9 0000 0 00000000-CAN 10001 9 0000 0 00000000-CAN 10001 1 0000 0 00000000 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 5.7,False,--- Expected+++ Resultant@@ -1,2 +1,2 @@-CAN 10001 21 0000 0 00000000+CAN 10001 21 xxxxx xxxxxx xxxxxxxx EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 6.1,False,--- Expected+++ Resultant@@ -1 +0,0 @@-EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 6.2,False,--- Expected+++ Resultant@@ -1,2 +1 @@-CHG 10001 1 10002 0 00000000 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 6.3,False,--- Expected+++ Resultant@@ -1,2 +1,2 @@-CHG 10001 1 10002 0 00000000+CHG 10001 1 10002 xxxxxx xxxxxxxx EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 6.4,False,--- Expected+++ Resultant@@ -1,2 +1 @@-CHG 10001 1 10002 0 00000000 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 6.5,False,--- Expected+++ Resultant@@ -1,2 +1 @@-CHG 10001 1 10002 0 00000000 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 6.6,False,--- Expected+++ Resultant@@ -1,4 +1 @@-CHG 10001 9 10002 0 00000000-CHG 10001 9 10002 0 00000000-CHG 10001 1 10002 0 00000000 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
+Test: 6.7,False,--- Expected+++ Resultant@@ -1,2 +1,2 @@-CHG 10001 21 10002 0 00000000+CHG 10001 21 10002 xxxxxx xxxxxxxx EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx

@@ -2,9 +2,10 @@
 import os, os.path, sys
 import filecmp
 from shutil import copy2
+import difflib
 
 
-results = ""
+results = "Test_Reults.csv"
 total_tests = 0
 correct_tests = 0
 
@@ -13,22 +14,26 @@ testsPath = os.getcwd() + '\\Testing'
 resultPath = os.getcwd() + '\\Outputs'
 rootDir = os.getcwd()
 
-def writeOutputFile():
-    file = os.getcwd() + "\\Master_Results.txt"
-    global results
-    results += "\n\nCorrect Test Cases: " + str(correct_tests) + "/" + str(total_tests)
+#def writeOutputFile():
+    #file = os.getcwd() + "\\Master_Results.txt"
+    #global results
+    #results += "\n\nCorrect Test Cases: " + str(correct_tests) + "/" + str(total_tests)
 
-    f = open(file, "w")
-    f.write(results)
-    f.close()
+    #f = open(file, "w")
+    #f.write(results)
+    #f.close()
 
-def printFiles(dir):
-    for file in os.listdir(dir):
-        if os.path.isdir(dir + "/" + file):
-            printFiles(dir + "/" + file)
-        else:
-            printFiles(dir + "/" + file)
-
+#def printFiles(dir):
+    #for file in os.listdir(dir):
+    #    if os.path.isdir(dir + "/" + file):
+    #        printFiles(dir + "/" + file)
+    #    else:
+    #        printFiles(dir + "/" + file)
+def showResults():
+    reportResults = open(results,"r")
+    for line in reportResults:
+        line.replace(","," ")
+        print(line)
 
 def testcase(fullPath):
     global total_tests, correct_tests
@@ -49,23 +54,33 @@ def testcase(fullPath):
 
     #move services list to root for front end to use for this test
     #This will overwrite the current valid services list
-    copy2(dirOfTest + "\\" + servicesList, rootDir)
+    #**********The copy function may take too long....
+    copy2(dirOfTest + "\\" + servicesList, rootDir + "\\" + "vServices.txt")
 
     #run the test case using the files
-    os.system('python a2.py ' + fullPath) #havnt tested
+    os.system('python a2.py ' + fullPath)
 
     #compare the result file with the files
     #sample result directory result_path + 1.Login + 1.1 + results.txt
     result = filecmp.cmp(expectedOutputFilePath, outputFilePath)
     
-    reportResults.write("Test: " + testId + "," + str(result) + "Put what info on what is different here," + "\n")
+    expectedLinesFile = open(expectedOutputFilePath,"r+")
+    outputLinesFile = open(outputFilePath,"r+")
+    expectedLines = expectedLinesFile.read().strip().splitlines()
+    outputLines = outputLinesFile.read().strip().splitlines()
+
+    diffResult = ""
+    for line in difflib.unified_diff(expectedLines, outputLines, fromfile='Expected', tofile='Resultant', lineterm=''):
+        diffResult += line
+
+    reportResults.write("Test: " + testId + "," + str(result) + "," + diffResult + "\n")
     return
 
 #run all tests for test files below the argument dir
 def runTesting(testsPath):
     global reportResults
 
-    testReultsPath = rootDir + "\\" + "Test_Reults.csv"
+    testReultsPath = rootDir + "\\" + results
     reportResults = open(testReultsPath,"w+")
     reportResults.write("Test,Result,Discription\n")
     for root, dirs, files in os.walk(testsPath):
@@ -79,5 +94,5 @@ def runTesting(testsPath):
     return
 #printFiles(test_path)
 runTesting(testsPath)
-#print output file for all of testing
-writeOutputFile()
+#show results saved to .csv also in terminal output
+showResults()

@@ -1,2 +1,1 @@
-CRE 10000 xxxx xxxxx aaa 19800101
 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
