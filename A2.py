@@ -367,6 +367,8 @@ def main():
         #open test file and then close after stripping new line characters
         with open(inputTestFile) as f: testLines = [line.rstrip('\n') for line in f]
         numberCommands = len(testLines)
+    if(len(sys.argv) > 2):
+        print("Error: Can only accept 1 test file, *running in non testing mode*")
 
     #infinite loop
     while True:
