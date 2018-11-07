@@ -2,6 +2,8 @@ Login
 agent
 SellTicket
 00000
+1
+sellticket
 10001
 1
 Logout

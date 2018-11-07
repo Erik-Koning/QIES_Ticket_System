@@ -1,2 +1,2 @@
-SEL 10001 1 00000 0 00000000
+SEL 10001 1 xxxxx xxxxxx xxxxxxxx
 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx

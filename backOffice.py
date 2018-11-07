@@ -1,7 +1,12 @@
-import sys
+import time
+import os.path
+import os           #to enable folders to be made
+import re
+import sys          #to check passed argument to program
 
-new_central_services_file = "New Central Services File.txt"
-new_valid_services_file = "New Valid Services File.txt"
+new_central_services_file = "centralServices.txt"
+new_valid_services_file = "validServices.txt"
+mergedTransactionSummaryFile = "mergedTransactionSummary.txt"
 
 
 # TODO - servicenumbers, servicenames, and dates are as described above for the TransactionSummaryFile
@@ -171,7 +176,8 @@ def writeOuputFiles(services):
     central_services_file.close()
     valid_services_file.close()
 
-
+def main():
+	
 
 if len(sys.argv) > 2:
 
@@ -188,3 +194,6 @@ if len(sys.argv) > 2:
 
 else:
     print('Error - Incorrect call to backoffice.py. More input files are required')
+
+
+main()

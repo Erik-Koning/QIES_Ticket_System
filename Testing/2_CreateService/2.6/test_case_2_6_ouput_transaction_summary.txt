@@ -1,2 +1,2 @@
-CRE 10003 0 00000 aad 19800101
+CRE 10003 xxxx xxxxx aad 19800101
 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx

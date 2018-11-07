@@ -1,2 +1,2 @@
-CAN 10001 1 0000 0 00000000
+CAN 10001 1 xxxx xxxxx xxxxxx xxxxxxx
 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx

@@ -1,2 +1,2 @@
-CRE 10001 0 00000 aab 19800101
+CRE 10001 xxxx xxxxx aab 19800101
 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx

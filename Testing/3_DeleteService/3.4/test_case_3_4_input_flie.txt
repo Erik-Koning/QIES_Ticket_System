@@ -2,6 +2,8 @@ Login
 planner
 DeleteService
 00000
+bbb
+DeleteService
 10001
 aaa
 Logout

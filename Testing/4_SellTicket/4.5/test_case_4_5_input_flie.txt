@@ -3,5 +3,7 @@ agent
 SellTicket
 10001
 0
+sellticket
+10001
 1
 Logout

@@ -1,2 +1,2 @@
-CHG 10001 1 10002 0 00000000
+CHG 10001 1 10002 xxxxxx xxxxxxxx
 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx

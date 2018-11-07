@@ -9,8 +9,8 @@ import re
 import sys          #to check passed argument to program
 
 user_type = 0 # 0 -> not loggedin | 1 -> agent | 2 -> planner
-validServicesFile = "vServices.txt"             #file name for valid services file
-summaryFile = "transactionSummaryFile.txt"      #file name for transaction summary file
+validServicesFile = "validServices.txt"         #file name for valid services file
+summaryFile = "transactionSummary.txt"          #file name for transaction summary file
 pendingSummaryFile = []                         #pending transaction summary file
 pendingValidServices = []                       #pending valid services file
 canceledTickets = 0 #number of tickets an agent has canceled in the current session
@@ -28,8 +28,16 @@ def writePendingServicesList():
     global validServicesFile
     #open the services file with the "append" argument so older services 
     #persist in the file after logout and re-login
-    sF = open(validServicesFile,"a")
-    sF.write('\n'.join(pendingValidServices))
+    if os.path.exists(validServicesFile):
+        with open(validServicesFile, 'r+') as sF:
+            content = sF.read()
+            sF.seek(0, 0)
+            sF.write('\n'.join(pendingValidServices) + '\n' + content)
+    else:
+        sF = open(validServicesFile,"w+")
+        sF.write('\n'.join(pendingValidServices))
+        sF.write('00000')
+
     sF.close()
     return
 
@@ -155,6 +163,26 @@ def initVariables():
     canceledTickets = 0
     changedTickets =0
 
+def initServiceFile():
+    #Check the valid services file exists, if it does not
+    #an empty txt file is created to be populated
+    #r+ Opens a file for both writing and reading.
+    #if the file does not exist, it creates a new file for reading and writing
+    #This ensures 00000 is at the end of the file always
+    with open(validServicesFile, 'r+') as f:
+        content = f.read()
+        lines = content.splitlines()
+        #if empty:
+        if os.stat(validServicesFile).st_size == 0:
+            f.write("00000")
+        #contents in valid serivces file
+        else:
+            last_line = re.sub('\n','',lines[len(lines)-1])
+            if not last_line == '00000':
+                f.seek(0, 0)
+                f.write(content + '\n' + '00000')
+    f.close()
+
 #waits for user to type login, then goes to login() function
 def wait_for_login():
     while True:
@@ -175,12 +203,8 @@ def login():
     global commandNumber
     global numberCommands
     global testLines
-    #Check the valid services file exists, if it does not
-    #an empty txt file is created to be populated
-    #a+ Opens a file for both appending and reading.
-    #if the file does not exist, it creates a new file for reading and writing
-    servicesFile = open(validServicesFile,"a+")
-    servicesFile.close()
+    
+    initServiceFile()
 
     while True:
         if testMode:
@@ -442,8 +466,6 @@ def changeTicket():
     else:
         numTickets = int(input("How many tickets would you like to change?"))
 
-    print("current " + currentService)
-    print("new" + newService)
     #check input
     if user_type == 1 and numTickets > 20:
         print("An Agent can change a max of 20 tickets per session")
@@ -517,7 +539,6 @@ def main():
         with open(inputTestFile) as f: testLines = [line.rstrip('\n') for line in f]
         commandNumber = 0
         numberCommands = len(testLines)
-
     elif(len(sys.argv) > 2):
         print("Error: Can only accept 1 test file, *running in non testing mode*\n")
 

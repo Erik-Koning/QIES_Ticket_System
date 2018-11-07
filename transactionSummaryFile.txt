@@ -1,2 +1,2 @@
-CHG 10001 21 10002 xxxxxx xxxxxxxx
+CRE 22222 xxxx xxxxx kkkk 19990505
 EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx
