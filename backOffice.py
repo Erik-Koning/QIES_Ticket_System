@@ -167,7 +167,6 @@ def writeCentralServicesList():
 def applyTransactions(services, transactions):
     for line in transactions:
         transaction = line.split(' ')
-        validData = True
 
         if transaction[0] == 'CRE':
 
@@ -175,10 +174,8 @@ def applyTransactions(services, transactions):
             serviceName = transaction[4]
             serviceDate = transaction[5].split('\n')[0]
 
-            #TODO - check the data to make sure its valid
-            # Set valid Data false if not
-
-            if validData:
+            # check the data to make sure its valid
+            if validServiceNum(serviceNumber) and validServiceName(serviceName) and validServiceDate(serviceDate):
             	pendingValidServices.append(serviceNumber)
             	pendingCentralServices.append(serviceNumber + " 0030" + " 0000" + " " + serviceName + " " + serviceDate)
 
@@ -188,13 +185,10 @@ def applyTransactions(services, transactions):
             serviceNumber = transaction[1]
             serviceName = transaction[4]
 
-            #TODO - check that the data is valid
-
-            try:
-                services.pop(int(serviceNumber))
-            except:
-                print('Warning - Serivce {}, does not exist. Cannot delete'.format(serviceNumber))
-
+            #check that the data is valid
+            if validServiceNum(serviceNumber) and validServiceName(serviceName):
+            	pendingValidServices.append(serviceNumber)
+            	pendingCentralServices.append(serviceNumber + " 0030" + " 0000" + " " + serviceName + " " + serviceDate)
 
         elif transaction[0] == 'SEL':
             sourceService = transaction[1]
