@@ -4,9 +4,9 @@ import os           #to enable folders to be made
 import re
 import sys          #to check passed argument to program
 
-new_central_services_file = "centralServices.txt"
-new_valid_services_file = "validServices.txt"
-mergedTransactionSummaryFile = "mergedTransactionSummary.txt"
+centralServicesFile = "centralServices.txt"
+validServicesFile = "validServices.txt"
+mergedTransactionSummaryFile = "transactionSummary.txt"
 
 
 # TODO - servicenumbers, servicenames, and dates are as described above for the TransactionSummaryFile
@@ -70,7 +70,7 @@ def readServices(file):
     return services
 
 
-def readTransactionFile(file):
+def readTransactionFile():
     transactions = []
     file_contents = open(file, 'r')
 
@@ -177,23 +177,17 @@ def writeOuputFiles(services):
     valid_services_file.close()
 
 def main():
-	
+	# wait animation until a transaction summary is detected
+	while True:
+		print("QIES Backend - Team DJANGO")
+		for x in range (0,5):
+			if os.path.isfile(mergedTransactionSummaryFile):
+				break
+			b = "Waiting" + "." * x
+			print(b, end="\r")
+			time.sleep(0.17)
+		os.system('cls||clear')
 
-if len(sys.argv) > 2:
-
-    old_central_services_file = sys.argv[1]
-    merged_transaction_summary_file = sys.argv[2]
-
-    services = readServices(old_central_services_file)
-
-    transactions = readTransactionFile(merged_transaction_summary_file)
-
-    applyTransactions(services, transactions)
-
-    writeOuputFiles(services)
-
-else:
-    print('Error - Incorrect call to backoffice.py. More input files are required')
-
+	TransactionSummaryLines = readTransactionFile()
 
 main()

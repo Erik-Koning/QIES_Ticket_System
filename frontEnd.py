@@ -28,12 +28,18 @@ def writePendingServicesList():
     global validServicesFile
     #open the services file with the "append" argument so older services 
     #persist in the file after logout and re-login
+    #if there is a valid services file
     if os.path.exists(validServicesFile):
         with open(validServicesFile, 'r+') as sF:
             content = sF.read()
-            sF.seek(0, 0)
-            sF.write('\n'.join(pendingValidServices) + '\n' + content)
+            lines = content.splitlines()
+            #If there is more than just the default 00000 service number in the list
+            #add the new content above
+            if len(lines) != 1:
+                sF.seek(0, 0)
+                sF.write('\n'.join(pendingValidServices) + '\n' + content)
     else:
+        print("Valid services list file was deleted but re-created")
         sF = open(validServicesFile,"w+")
         sF.write('\n'.join(pendingValidServices))
         sF.write('00000')
@@ -169,11 +175,15 @@ def initServiceFile():
     #r+ Opens a file for both writing and reading.
     #if the file does not exist, it creates a new file for reading and writing
     #This ensures 00000 is at the end of the file always
+    if not os.path.isfile(validServicesFile):
+        f = open(validServicesFile,'w+')
+        f.close()
     with open(validServicesFile, 'r+') as f:
-        content = f.read()
-        lines = content.splitlines()
+        content = f.read()                  #returns a string of the content
+        lines = content.splitlines()        #splits content into a string list of each line---
         #if empty:
-        if os.stat(validServicesFile).st_size == 0:
+        if len(lines)==0:
+            print("Empty validServicesFile")
             f.write("00000")
         #contents in valid serivces file
         else:
@@ -558,7 +568,7 @@ def main():
             makePendingSummaryFileTestingMode()
             firstTestModeSession = False
 
-        print("QIES Interface - Team DJANGO")
+        print("QIES Interface - Team DJANGO\nWhat would you like to do?")
 
         if (not testMode):
             wait_for_login()
