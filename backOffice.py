@@ -31,22 +31,37 @@ def checkInputService(line):
         print('Error \n line: {} \n Line is not seperated by exactly one space between items'.format(line))
         return False
 
-    # check that service capacities and number of tickets are 1 to 4 decimal digits
+    # {service number, service capacity, sold tickets, service name, service date}
 
-    if (len(str(inputs[1])) < 1) or (len(str(inputs[1])) > 4) or not str(inputs[1]).isdigit():
+    # check service number
+    if len(str(inputs[1])) != 5 or not str(inputs[1]).isdigit():
         print('Error \n line: {} \n The service capacity must be between 1 and 4 decimal digits'.format(line))
         return False
+
+    # check that service capacities are 1 to 4 decimal digits
     if (len(str(inputs[2])) < 1) or (len(str(inputs[2])) > 4) or not str(inputs[2]).isdigit():
         print('Error \n line: {} \n The number of tickets must be between 1 and 4 decimal digits'.format(line))
         return False
-
     # check service capacities is not greater than 1000
-    if int(inputs[1]) > 1000:
+    if int(inputs[2]) > 1000:
         print('Error \n line: {} \n Service Capacity must not be greater than 1000'.format(line))
         return False
+    if int(inputs[2]) <= 0:
+        print('Error \n line: {} \n Service Capacity must not be less than or equal to 0'.format(line))
+        return False
+
     # check the number of tickets sold is not greater than the service capacity
-    if int(inputs[2]) > int(inputs[1]):
+    if int(inputs[3]) > int(inputs[2]):
         print('Error \n line: {} \n The number of tickets sold cannot be greater than the service capacity'.format(line))
+        return False
+
+    # check service name is valid
+    if not validServiceName(inputs[3]):
+        print("'Error \n line: {} \n The service name contains a char other than a-Z or single quote".format(line))
+
+    # check the service date is valid
+    if not validServiceDate(inputs[4]):
+        print("'Error \n line: {} \n The service date is not valid".format(line))
         return False
 
     return True
@@ -96,11 +111,17 @@ def validServiceNum(service):
     servicesFile.close()
     return False
 
-def validServiceName(serviceName):
-    if len(serviceName) < 3 or len(serviceName) > 39:
+# Parameter: String service_name
+# Return: Booleam True/False
+# Ture if service name in range a-z or A-z or single quote
+# False otherwise
+def validServiceName(service_name):
+    if len(service_name) < 3 or len(service_name) >39:
         return False
-    else:
-        return True
+    for aChar in service_name:
+        if ord(aChar) not in range(65, 91) and ord(aChar) not in range(97, 123) and ord(aChar) != 39:
+            return False
+    return True
 
 def readServices(file):
     services = {}
