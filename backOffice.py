@@ -8,6 +8,14 @@ centralServicesFile = "centralServices.txt"
 validServicesFile = "validServices.txt"
 mergedTransactionSummaryFile = "transactionSummary.txt"
 
+#global lists
+pendingValidServices = []                       #pending valid services file
+pendingCentralServices = []
+
+def initVariables():
+	#clear out variables from previous operations
+	pendingValidServices=[]
+	pendingCentralServices=[]
 
 # TODO - servicenumbers, servicenames, and dates are as described above for the TransactionSummaryFile
 def checkInputService(line):
@@ -43,6 +51,56 @@ def checkInputService(line):
 
     return True
 
+#returns false for all dates that are outside a valid range
+#true if a valid date
+def validServiceDate(date):
+    #check if the date is not the right lenght or contains a letter
+    if len(str(date)) != 8 or bool(re.search('[a-zA-Z]', str(date))):
+        return False
+    #cretae a numeric list of the date values
+    dL = [int(x) for x in str(date)]
+    if dL[0] > 2 or dL[0] < 1:                                              #check illegal years (X000MMDD)
+        return False
+    if dL[0] == 1 and (dL[1] < 9 or (dL[1] == 9 and dL[2] < 8)):            #check illegal years in 20th centry (19XXMMDD)
+        return False
+    if dL[4] > 1 or dL[4] < 0 or (dL[4] == 1 and dL[5] > 2) or (dL[4] == 0 and dL[5] == 0):     #check illegal monthes (YYYYXXDD)
+        return False
+    if dL[6] > 3 or dL[6] < 0 or (dL[6] == 3 and dL[7] > 1) or (dL[6] == 0 and dL[7] == 0):      #check illegal day (YYYYMMXX)
+        return False
+    #illegal day for respective month value
+    #Jan, Mar, May, July, Aug, Oct, Dec, can not have more than 31 days
+    if ((dL[4] == 0 and dL[5] == 1) or (dL[4] == 0 and dL[5] == 3) or (dL[4] == 0 and dL[5] == 5) or (dL[4] == 0 and dL[5] == 7) or (dL[4] == 0 and dL[5] == 8) or (dL[4] == 1 and dL[5] == 0) or (dL[4] == 1 and dL[5] == 2)) and (dL[6] >= 3 and dL[7] > 1):
+        return False 
+    #Apr, June, Sept, Nov, can not have more than 30 days
+    if ((dL[4] == 0 and dL[5] == 4) or (dL[4] == 0 and dL[5] == 6) or (dL[4] == 0 and dL[5] == 9) or (dL[4] == 1 and dL[5] == 1)) and (dL[6] >= 3 and dL[7] > 0):
+        return False 
+    #Feb, disregarding leap years...
+    if (dL[4] == 0 and dL[5] == 2) and (dL[6] >= 2 and dL[7] > 8):
+        return False
+    return True
+
+#returns true if the passed service number (as a string), 
+#is in the valid services file, false otherwise
+def validServiceNum(service):
+    global validServicesFile
+    if service[0]=="0" or len(service) != 5 or [int(x) for x in str(service)][0] == 0:
+        return false
+    service = re.sub(r"[\n\t\s]*", "", service)
+    servicesFile = open(validServicesFile,"r")
+    lines = servicesFile.readlines()
+    for line in lines:
+        line = re.sub(r"[\n\t\s]*", "", line)
+        if service == line:
+            servicesFile.close()
+            return True
+    servicesFile.close()
+    return False
+
+def validServiceName(serviceName):
+    if len(serviceName) < 3 or len(serviceName) > 39:
+        return False
+    else:
+        return True
 
 def readServices(file):
     services = {}
@@ -69,7 +127,6 @@ def readServices(file):
     file_contents.close()
     return services
 
-
 def readTransactionFile():
     transactions = []
     file_contents = open(file, 'r')
@@ -80,10 +137,37 @@ def readTransactionFile():
     file_contents.close()
     return transactions
 
+#writes the new services to the valid services file.
+def writePendingServicesList():
+    global pendingValidServices
+    global validServicesFile
+    #open the services file with the "append" argument so older services 
+    #persist in the file after logout and re-login
+    #if there is a valid services file
+    if os.path.exists(validServicesFile):
+        with open(validServicesFile, 'r+') as sF:
+            content = sF.read()
+            lines = content.splitlines()
+            #If there is more than just the default 00000 service number in the list
+            #add the new content above
+            if len(pendingValidServices) > 0:
+                sF.seek(0, 0)
+                sF.write('\n'.join(pendingValidServices) + '\n' + content)
+    else:
+        sF = open(validServicesFile,"w+")
+        sF.write('\n'.join(pendingValidServices))
+        sF.write('00000')
+
+    sF.close()
+    return
+
+def writeCentralServicesList():
+
 
 def applyTransactions(services, transactions):
     for line in transactions:
         transaction = line.split(' ')
+        validData = True
 
         if transaction[0] == 'CRE':
 
@@ -92,8 +176,11 @@ def applyTransactions(services, transactions):
             serviceDate = transaction[5].split('\n')[0]
 
             #TODO - check the data to make sure its valid
+            # Set valid Data false if not
 
-            services[int(serviceNumber)] = [int(serviceNumber), 0, 0, serviceName, serviceDate] #TODO - check where you get service capacity from
+            if validData:
+            	pendingValidServices.append(serviceNumber)
+            	pendingCentralServices.append(serviceNumber + " 0030" + " 0000" + " " + serviceName + " " + serviceDate)
 
 
         elif transaction[0] == 'DEL':
@@ -161,33 +248,30 @@ def applyTransactions(services, transactions):
         else:
             print('ERROR - unrecongized transaction code: {}'.format(transaction[0]))
 
-
-def writeOuputFiles(services):
-    valid_services_file = open(new_valid_services_file, 'w')
-    central_services_file = open(new_central_services_file, 'w')
-
-    for key in services:
-        valid_services_file.write(str(key) + "\n")
-        result = ""
-        for info in services[key]:
-            result += str(info) + " "
-        central_services_file.write(result[:len(result)-1] + "\n") #write to file without last space
-
-    central_services_file.close()
-    valid_services_file.close()
-
 def main():
+
+	initVariables()
+
 	# wait animation until a transaction summary is detected
 	while True:
 		print("QIES Backend - Team DJANGO")
 		for x in range (0,5):
 			if os.path.isfile(mergedTransactionSummaryFile):
 				break
-			b = "Waiting" + "." * x
+			b = "Waiting for frontend day to end" + "." * x
 			print(b, end="\r")
 			time.sleep(0.17)
 		os.system('cls||clear')
 
 	TransactionSummaryLines = readTransactionFile()
+	servicesInformation = readServices()
+
+	applyTransactions(servicesInformation,TransactionSummaryLines)
+
+	writePendingServicesList()
+	writePendingServicesList()
+
+	#so the front end can create a new one to trigger new transaction operations
+	os.remove(mergedTransactionSummaryFile)
 
 main()

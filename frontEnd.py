@@ -12,7 +12,6 @@ user_type = 0 # 0 -> not loggedin | 1 -> agent | 2 -> planner
 validServicesFile = "validServices.txt"         #file name for valid services file
 summaryFile = "transactionSummary.txt"          #file name for transaction summary file
 pendingSummaryFile = []                         #pending transaction summary file
-pendingValidServices = []                       #pending valid services file
 canceledTickets = 0 #number of tickets an agent has canceled in the current session
 changedTickets = 0  #number of tickets an agent has changed in the current session
 
@@ -21,31 +20,6 @@ changedTickets = 0  #number of tickets an agent has changed in the current sessi
 def addToPendingServicesList(serviceNum):
     global pendingValidServices
     pendingValidServices.append(str(serviceNum))
-
-#writes the new services to the valid services file.
-def writePendingServicesList():
-    global pendingValidServices
-    global validServicesFile
-    #open the services file with the "append" argument so older services 
-    #persist in the file after logout and re-login
-    #if there is a valid services file
-    if os.path.exists(validServicesFile):
-        with open(validServicesFile, 'r+') as sF:
-            content = sF.read()
-            lines = content.splitlines()
-            #If there is more than just the default 00000 service number in the list
-            #add the new content above
-            if len(lines) != 1:
-                sF.seek(0, 0)
-                sF.write('\n'.join(pendingValidServices) + '\n' + content)
-    else:
-        print("Valid services list file was deleted but re-created")
-        sF = open(validServicesFile,"w+")
-        sF.write('\n'.join(pendingValidServices))
-        sF.write('00000')
-
-    sF.close()
-    return
 
 #adds transaction details to pending transaction summary array
 def addToPendingSummaryFile(transCode, sNum1, numTickets, sNum2, sName, sDate):
@@ -141,8 +115,10 @@ def validServiceDate(date):
 
 #returns true if the passed service number (as a string), 
 #is in the valid services file, false otherwise
-def isValidService(service):
+def validServiceNum(service):
     global validServicesFile
+    if service[0]=="0" or len(service) != 5 or [int(x) for x in str(service)][0] == 0:
+        return false
     service = re.sub(r"[\n\t\s]*", "", service)
     servicesFile = open(validServicesFile,"r")
     lines = servicesFile.readlines()
@@ -153,6 +129,12 @@ def isValidService(service):
             return True
     servicesFile.close()
     return False
+
+def validServiceName(serviceName):
+    if len(serviceName) < 3 or len(serviceName) > 39:
+        return False
+    else:
+        return True
 
 #TODO: number of tickets available for that service number
 def ticketsAvailable(serviceNum):
@@ -249,50 +231,53 @@ def createService():
     if user_type != 2:
         print("Invalid operation for user")
         return
-    while True:
-        if testMode:
-            if commandNumber >= numberCommands:
-                    print("All test commands done for test case Id: {word}".format(word=testId))
-                    writePendingSummaryFileTestingMode()
-                    exit()
-            serviceNum = testLines[commandNumber].lower().replace(" ","")
-            commandNumber += 1
-        else:
-            serviceNum = input("What is the service number?")
-        #service must not already be in valid service list and
-        #service number must be 5 characters and not begin with 0
-        if isValidService(serviceNum) or len(serviceNum) != 5 or [int(x) for x in str(serviceNum)][0] == 0:
-            print("Invalid new service number")
-        else:
-            break
-    while True:
-        if testMode:
-            if commandNumber >= numberCommands:
-                    print("All test commands done for test case Id: {word}".format(word=testId))
-                    writePendingSummaryFileTestingMode()
-                    exit()
-            serviceDate = testLines[commandNumber].lower().replace(" ","")
-            commandNumber += 1
-        else:
-            serviceDate = input("What is the service date in YYYYMMDD format?")
-        if not validServiceDate(serviceDate) or bool(re.search('[a-zA-Z]', str(serviceDate))):
-            print("Invalid service date")
-        else:
-            break
-    while True:
-        if testMode:
-            if commandNumber >= numberCommands:
-                    print("All test commands done for test case Id: {word}".format(word=testId))
-                    writePendingSummaryFileTestingMode()
-                    exit()
-            serviceName = testLines[commandNumber].lower().replace(" ","")
-            commandNumber += 1
-        else:
-            serviceName = input("What is the service name?")
-        if len(serviceName) < 3 or len(serviceName) > 39:
+    
+    #get input
+    if testMode:
+        if commandNumber >= numberCommands:
+                print("All test commands done for test case Id: {word}".format(word=testId))
+                writePendingSummaryFileTestingMode()
+                exit()
+        serviceNum = testLines[commandNumber].lower().replace(" ","")
+        commandNumber += 1
+
+        if commandNumber >= numberCommands:
+                print("All test commands done for test case Id: {word}".format(word=testId))
+                writePendingSummaryFileTestingMode()
+                exit()
+        serviceDate = testLines[commandNumber].lower().replace(" ","")
+        commandNumber += 1
+
+        if commandNumber >= numberCommands:
+                print("All test commands done for test case Id: {word}".format(word=testId))
+                writePendingSummaryFileTestingMode()
+                exit()
+        serviceName = testLines[commandNumber].lower().replace(" ","")
+        commandNumber += 1
+
+    else:
+        serviceNum = input("What is the service number?")
+        serviceDate = input("What is the service date in YYYYMMDD format?")
+        serviceName = input("What is the service name?")
+        
+    #check input
+    #service must not already be in valid service list and
+    #service number must be 5 characters and not begin with 0
+    if validServiceNum(serviceNum):
+        print("Invalid new service number")
+        return
+
+    if validServiceName(serviceName):
             print("Invalid service name")
-        else:
-            break
+            return
+
+    if not validServiceDate(serviceDate):
+            print("Invalid service date")
+            return
+
+
+
+
     addToPendingServicesList(serviceNum)
     addToPendingSummaryFile("CRE", serviceNum, "xxxx", "xxxxx", serviceName, serviceDate)
     return
@@ -330,7 +315,7 @@ def deleteService():
         serviceName = input("What is the service name?")
 
     #check the input, service number must be 5 characters and not begin with 0
-    if not isValidService(serviceNum) or (len(serviceNum) != 5 or [int(x) for x in str(serviceNum)][0] == 0):
+    if not validServiceNum(serviceNum):
         print("Invalid service number")
         return
     if len(serviceName) < 3 or len(serviceName) > 39:
@@ -383,7 +368,7 @@ def sellTicket():
     if bool(re.search('[a-zA-Z]', str(numTickets))) or numTickets < 0 or ticketsAvailable(serviceNum) < numTickets or len(str(numTickets)) > 4:
         print("Invalid number of tickets")
         return
-    if not isValidService(serviceNum):
+    if not validServiceNum(serviceNum):
         print("Not a valid service number")
         return
 
@@ -429,7 +414,7 @@ def cancelTicket():
     elif user_type == 1 and ((numTickets + canceledTickets) > 20):
         print("Agent can cancel a max of 20 tickets per session")
         return
-    if not isValidService(serviceNum):
+    if not validServiceNum(serviceNum):
         print("Not a valid service number")
         return
 
@@ -489,10 +474,10 @@ def changeTicket():
     if currentService == newService:
         print("Not a different service number")
         return
-    if not isValidService(newService):
+    if not validServiceNum(newService):
         print("Not a valid service number" + newService)
         return
-    if not isValidService(currentService):
+    if not validServiceNum(currentService):
         print("Not a valid service number" + currentService)
         return
 
@@ -562,14 +547,27 @@ def main():
         #clear out old values from previous login session
         if(not testMode):
             initVariables()
-        #start a spending summary file so even after a test logout the same transaction summary file is appended to by subsequent commands
+        #start a pending summary file so even after a test logout the same transaction summary file is appended to by subsequent commands
         if(firstTestModeSession):
             initVariables()
             makePendingSummaryFileTestingMode()
             firstTestModeSession = False
 
-        print("QIES Interface - Team DJANGO\nWhat would you like to do?")
+        # If the summaryfile exists it means the backoffice has not yet finished its work.
+        # wait until no summaryFile
+        while True:
+            print("QIES Backend - Team DJANGO")
+            for x in range (0,5):
+                if not os.path.isfile(summaryFile):
+                    break
+                b = "Waiting for backend to complete" + "." * x
+                print(b, end="\r")
+                time.sleep(0.17)
+            os.system('cls||clear')
+            if not os.path.isfile(summaryFile):
+                break
 
+        print("What would you like to do?")
         if (not testMode):
             wait_for_login()
 
