@@ -316,7 +316,7 @@ def main():
         # wait animation until a transaction summary is detected
         while lock:
             print("QIES Backend - Team DJANGO")
-            for x in range (0,5):
+            for x in range (0,6):
                 if os.path.isfile(summaryFile):
                     lock = False
                 b = "Waiting for frontend day to end" + "." * x

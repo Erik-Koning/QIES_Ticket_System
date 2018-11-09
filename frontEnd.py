@@ -580,7 +580,7 @@ def main():
         # wait until no summaryFile
         while True:
             print("QIES Backend - Team DJANGO")
-            for x in range (0,5):
+            for x in range (0,6):
                 if not os.path.isfile(summaryFile):
                     break
                 b = "Waiting for backend to complete" + "." * x
