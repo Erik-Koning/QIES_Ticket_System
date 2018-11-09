@@ -6,16 +6,16 @@ import sys          #to check passed argument to program
 
 centralServicesFile = "centralServices.txt"
 validServicesFile = "validServices.txt"
-mergedTransactionSummaryFile = "transactionSummary.txt"
+summaryFile = "transactionSummary.txt"
 
 #global lists
 pendingValidServices = []                       #pending valid services file
 pendingCentralServices = []
 
 def initVariables():
-	#clear out variables from previous operations
-	pendingValidServices=[]
-	pendingCentralServices=[]
+    #clear out variables from previous operations
+    pendingValidServices=[]
+    pendingCentralServices=[]
 
 # TODO - servicenumbers, servicenames, and dates are as described above for the TransactionSummaryFile
 def checkInputService(line):
@@ -66,6 +66,67 @@ def checkInputService(line):
 
     return True
 
+#When a service is asked to be removed from front end, the front end handles
+#it immediately by removing it from the physical file so it can not be used
+# later in that session. Services created are also not able to be used until the
+# next login so if a service is created then removed in the same session it will only
+# exist in the pending valid services file and pending central services.
+# we remove a service from the two pending lists
+def removeService(serviceNumber, serviceName):
+    index = 0
+    removedPV = False
+    removedPC = False
+    for line in pendingValidServices:
+        if str(serviceNumber) in line:
+            del  pendingValidServices[index]
+            removedPV = True
+        index += 1
+    index = 0
+    for line in pendingCentralServices:
+        lineComp = line.split(" ")
+        if str(serviceNumber) in lineComp[0]:
+            del pendingCentralServices[index]
+            removedPC = True
+        index += 1
+    if removedPV and removedPC:
+        print("removed the service successfully")
+    elif removedPC and not removedPV:
+        print("removed from the pendingCentralServices file only")
+    elif removedPV and not removedPC:
+        print("removed from the pendingValidServices file only")
+    else:
+        print("service not removed")
+
+def exchangeTickets(sourceService,destinationService,numberOfTickets):
+    if( not inValidServices(sourceService) or not inValidServices(destinationService)):
+        print("Error: One of the services is missing from the valid services file")
+        return
+    #take tickets off source
+    modifyServiceCapacity(sourceService,int(numberOfTickets)*-1)
+    #place tickets on destination
+    modifyServiceCapacity(destinationService,numberOfTickets)
+    return
+
+
+def modifyServiceCapacity(serviceNumber, ticketsDiff):
+    cF = open(centralServicesFile, "r")         #open file for reading
+    lines = sF.readlines()                      #saves lines
+    cF.close()
+
+    cF = open(centralServicesFile, "w")         #open for writing
+    for line in lines:                      
+        lineComp = line.split(" ")
+        if str(serviceNumber) in lineComp[0]:
+            capacity = int(lineComp[1]) + ticketsDiff
+            if len(str(capacity)) == 2:
+                capacity = "00" + str(capacity)
+            elif len(str(capacity)) == 1:
+                capacity = "000" + str(capacity)
+            lineComp[1] = capacity
+            line = " ".join(lineComp)
+        cF.write(line)
+    cF.close()
+
 #returns false for all dates that are outside a valid range
 #true if a valid date
 def validServiceDate(date):
@@ -94,13 +155,8 @@ def validServiceDate(date):
         return False
     return True
 
-#returns true if the passed service number (as a string), 
-#is in the valid services file, false otherwise
-def validServiceNum(service):
+def inValidServices(service):
     global validServicesFile
-    if service[0]=="0" or len(service) != 5 or [int(x) for x in str(service)][0] == 0:
-        return false
-    service = re.sub(r"[\n\t\s]*", "", service)
     servicesFile = open(validServicesFile,"r")
     lines = servicesFile.readlines()
     for line in lines:
@@ -109,6 +165,13 @@ def validServiceNum(service):
             servicesFile.close()
             return True
     servicesFile.close()
+    return False
+
+#returns true if the passed service number (as a string), 
+#is in the valid services file, false otherwise
+def validServiceNum(service):
+    if service[0]=="0" or len(service) != 5 or [int(x) for x in str(service)][0] == 0:
+        return false
     return False
 
 # Parameter: String service_name
@@ -123,10 +186,13 @@ def validServiceName(service_name):
             return False
     return True
 
-def readServices(file):
+def readServices():
     services = {}
     lastServiceNumber = 0  #to check that the input file has service numbers in order
-    file_contents = open(file, 'r')
+    if not os.path.isfile(centralServicesFile):
+        file_contents = open(centralServicesFile, 'w+')
+    else:
+        file_contents = open(centralServicesFile, 'r')
     for line in file_contents:
         verify = checkInputService(line)
         if not verify:
@@ -150,7 +216,7 @@ def readServices(file):
 
 def readTransactionFile():
     transactions = []
-    file_contents = open(file, 'r')
+    file_contents = open(summaryFile, 'r')
 
     for line in file_contents:
         transactions.append(line)
@@ -183,7 +249,7 @@ def writePendingServicesList():
     return
 
 def writeCentralServicesList():
-
+    return
 
 def applyTransactions(services, transactions):
     for line in transactions:
@@ -196,9 +262,9 @@ def applyTransactions(services, transactions):
             serviceDate = transaction[5].split('\n')[0]
 
             # check the data to make sure its valid
-            if validServiceNum(serviceNumber) and validServiceName(serviceName) and validServiceDate(serviceDate):
-            	pendingValidServices.append(serviceNumber)
-            	pendingCentralServices.append(serviceNumber + " 0030" + " 0000" + " " + serviceName + " " + serviceDate)
+            if not inValidServices(serviceNumber) and validServiceNum(serviceNumber) and validServiceName(serviceName) and validServiceDate(serviceDate):
+                pendingValidServices.append(serviceNumber)
+                pendingCentralServices.append(serviceNumber + " 0030" + " 0000" + " " + serviceName + " " + serviceDate)
 
 
         elif transaction[0] == 'DEL':
@@ -208,35 +274,26 @@ def applyTransactions(services, transactions):
 
             #check that the data is valid
             if validServiceNum(serviceNumber) and validServiceName(serviceName):
-            	pendingValidServices.append(serviceNumber)
-            	pendingCentralServices.append(serviceNumber + " 0030" + " 0000" + " " + serviceName + " " + serviceDate)
+                removeService(serviceNumber, serviceName)
+                
+                
 
         elif transaction[0] == 'SEL':
             sourceService = transaction[1]
             numberOfTickets = transaction[2]
 
-            try:
-                services[int(sourceService)][2] = services[int(sourceService)][2] + numberOfTickets
-            except:
-                print('ERROR - service number does not exist')
-                pass
+            if validServiceNum(sourceService) and inValidServices(sourceService):
+                #negative number of tickets becuase removing number from capacity
+                modifyServiceCapacity(sourceService, int(numberOfTickets)*-1)
 
         elif transaction[0] == 'CAN':
 
             sourceService = transaction[1]
             numberOfTickets = transaction[2]
 
-            try:
-
-                change = services[int(sourceService)][2] - numberOfTickets
-                if change >= 0 :
-                    services[int(sourceService)][2] = change
-                else:
-                    print('ERROR - number of tickets cannot be below 0')
-                    pass
-            except:
-                print('ERROR - service number does not exist')
-                pass
+            if validServiceNum(sourceService):
+                #positive number of tickets value becuase adding to capacity
+                modifyServiceCapacity(sourceService, int(numberOfTickets))
 
         elif transaction[0] == 'CHG':
 
@@ -244,19 +301,8 @@ def applyTransactions(services, transactions):
             numberOfTickets = transaction[2]
             destinationService = transaction[3]
 
-            try:
-                number_of_tickets_sold = services[int(sourceService)][2]
-                change = number_of_tickets_sold - numberOfTickets
-                if change >= 0:
-                    services[int(sourceService)][2] = change
-                else:
-                    print('ERROR - number of tickets cannot be below 0')
-                    pass
-
-                services[int(destinationService)][2] = services[int(destinationService)][2] + numberOfTickets
-            except:
-                print('ERROR - service number does not exist')
-                pass
+            if validServiceNum(sourceService) and validServiceNum(destinationService):
+                exchangeTickets(sourceService,destinationService,numberOfTickets)
 
         elif transaction[0] == 'EOS':
             pass
@@ -264,29 +310,32 @@ def applyTransactions(services, transactions):
             print('ERROR - unrecongized transaction code: {}'.format(transaction[0]))
 
 def main():
+    while True:
+        initVariables()
+        lock = True
+        # wait animation until a transaction summary is detected
+        while lock:
+            print("QIES Backend - Team DJANGO")
+            for x in range (0,5):
+                if os.path.isfile(summaryFile):
+                    lock = False
+                b = "Waiting for frontend day to end" + "." * x
+                print(b, end="\r")
+                time.sleep(0.17)
+            os.system('cls||clear')
 
-	initVariables()
 
-	# wait animation until a transaction summary is detected
-	while True:
-		print("QIES Backend - Team DJANGO")
-		for x in range (0,5):
-			if os.path.isfile(mergedTransactionSummaryFile):
-				break
-			b = "Waiting for frontend day to end" + "." * x
-			print(b, end="\r")
-			time.sleep(0.17)
-		os.system('cls||clear')
+        TransactionSummaryLines = readTransactionFile()
+        servicesInformation = readServices()
 
-	TransactionSummaryLines = readTransactionFile()
-	servicesInformation = readServices()
+        applyTransactions(servicesInformation,TransactionSummaryLines)
 
-	applyTransactions(servicesInformation,TransactionSummaryLines)
+        writePendingServicesList()
+        writePendingServicesList()
 
-	writePendingServicesList()
-	writePendingServicesList()
-
-	#so the front end can create a new one to trigger new transaction operations
-	os.remove(mergedTransactionSummaryFile)
+        #so the front end can create a new one to trigger new transaction operations
+        print("Back Office Work Completed")
+        time.sleep(0.5)
+        os.remove(summaryFile)
 
 main()

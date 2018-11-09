@@ -9,11 +9,13 @@ import re
 import sys          #to check passed argument to program
 
 user_type = 0 # 0 -> not loggedin | 1 -> agent | 2 -> planner
+centralServicesFile = "centralServices.txt"
 validServicesFile = "validServices.txt"         #file name for valid services file
 summaryFile = "transactionSummary.txt"          #file name for transaction summary file
 pendingSummaryFile = []                         #pending transaction summary file
 canceledTickets = 0 #number of tickets an agent has canceled in the current session
 changedTickets = 0  #number of tickets an agent has changed in the current session
+
 
 #adds a service to the pending services file array,
 #to be added to the file on logout
@@ -113,12 +115,9 @@ def validServiceDate(date):
         return False
     return True
 
-#returns true if the passed service number (as a string), 
-#is in the valid services file, false otherwise
-def validServiceNum(service):
+#checks to see if service is in valid services list
+def inValidServices(service):
     global validServicesFile
-    if service[0]=="0" or len(service) != 5 or [int(x) for x in str(service)][0] == 0:
-        return false
     service = re.sub(r"[\n\t\s]*", "", service)
     servicesFile = open(validServicesFile,"r")
     lines = servicesFile.readlines()
@@ -130,15 +129,39 @@ def validServiceNum(service):
     servicesFile.close()
     return False
 
+#returns true if the passed service number (as a string), 
+#is in the valid services file, false otherwise
+def validServiceNum(service):
+    if service[0]=="0" or len(service) != 5:
+        return False
+    return True
+
 def validServiceName(serviceName):
     if len(serviceName) < 3 or len(serviceName) > 39:
         return False
     else:
         return True
 
-#TODO: number of tickets available for that service number
 def ticketsAvailable(serviceNum):
-    return 9999
+    try:
+        cF = open(centralServicesFile, "r")         #open file for reading
+    except:
+        print("Error: Back office not run yet, no centralServicesFile")
+        return 0
+    lines = sF.readlines()                      #saves lines
+    for line in lines:                      
+        lineComp = line.split(" ")
+        #if this line is for the service number
+        if str(serviceNumber) in lineComp[0]:
+            capacity = int(lineComp[1])
+            if len(str(capacity)) == 2:
+                return int("00" + str(capacity))
+            elif len(str(capacity)) == 1:
+                return int("000" + str(capacity))
+
+    print("Error: Service Number not found")
+    return 0
+
 
 def initVariables():
     #initialize variables to be empty on login
@@ -261,19 +284,18 @@ def createService():
         serviceName = input("What is the service name?")
         
     #check input
-    #service must not already be in valid service list and
-    #service number must be 5 characters and not begin with 0
-    if validServiceNum(serviceNum):
-        print("Invalid new service number")
+    #service must not already be in valid service list
+    if not validServiceNum(serviceNum):
+        print("Error: Invalid new service number")
         return
-
-    if validServiceName(serviceName):
-            print("Invalid service name")
-            return
-
+    #service number must be 5 characters and not begin with 0
+    if not validServiceName(serviceName):
+        print("Invalid service name")
+        return
+    #valid date
     if not validServiceDate(serviceDate):
-            print("Invalid service date")
-            return
+        print("Invalid service date")
+        return
 
 
 
@@ -406,16 +428,18 @@ def cancelTicket():
 
     #check input
     if user_type == 1 and numTickets > 10:
-        print("Agent can cancel a max of 10 tickets")
+        print("Error: Agent can cancel a max of 10 tickets")
         return
-    elif numTickets < 0 or bool(re.search('[a-zA-Z]', str(numTickets))):
-        print("Invalid number of tickets")
+    if numTickets < 0 or bool(re.search('[a-zA-Z]', str(numTickets))):
+        print("Error: Invalid number of tickets")
         return
-    elif user_type == 1 and ((numTickets + canceledTickets) > 20):
-        print("Agent can cancel a max of 20 tickets per session")
+    if ticketsAvailable(serviceNum)+numTickets > 30:
+        print("Error: Cannot cancel more tickets than have been bought for that service")
+    if user_type == 1 and ((numTickets + canceledTickets) > 20):
+        print("Error: Agent can cancel a max of 20 tickets per session")
         return
     if not validServiceNum(serviceNum):
-        print("Not a valid service number")
+        print("Error:Not a valid service number")
         return
 
     canceledTickets += int(numTickets)
@@ -494,7 +518,6 @@ def logout():
     #we merge these lists at the end becuase the added services in this session
     #cannot be accessed untill a new session starts. And the summary file is not
     #finalized until after official logout
-    writePendingServicesList()
     writePendingSummaryFile()
     user_type = 0
     print("Logout successfully")
@@ -567,7 +590,7 @@ def main():
             if not os.path.isfile(summaryFile):
                 break
 
-        print("What would you like to do?")
+        print("QIES Backend - Team DJANGO\nWhat would you like to do?")
         if (not testMode):
             wait_for_login()
 
