@@ -142,24 +142,60 @@ def validServiceName(serviceName):
     else:
         return True
 
-def ticketsAvailable(serviceNum):
+#number of tickets available to buy
+def serviceCapacity(serviceNum):
     try:
         cF = open(centralServicesFile, "r")         #open file for reading
     except:
         print("Error: Back office not run yet, no centralServicesFile")
         return 0
     lines = sF.readlines()                      #saves lines
+    cF.close()
     for line in lines:                      
         lineComp = line.split(" ")
         #if this line is for the service number
-        if str(serviceNumber) in lineComp[0]:
-            capacity = int(lineComp[1])
-            if len(str(capacity)) == 2:
-                return int("00" + str(capacity))
-            elif len(str(capacity)) == 1:
-                return int("000" + str(capacity))
+        if str(serviceNum) in lineComp[0]:
+            #return capacity
+            return int(lineComp[1])
+    print("Error: Service number used to find service capacity, not found")
+    return 0
 
-    print("Error: Service Number not found")
+#number of tickets sold for service
+def ticketsSold(serviceNum):
+    try:
+        cF = open(centralServicesFile, "r")         #open file for reading
+    except:
+        print("Error: Back office not run yet, no centralServicesFile")
+        return 0
+    lines = sF.readlines()                      #saves lines
+    cF.close()
+    for line in lines:                      
+        lineComp = line.split(" ")
+        #if this line is for the service number
+        if str(serviceNum) in lineComp[0]:
+            #return capacity
+            return int(lineComp[2])
+    print("Error: Service number used to find service ticketsSold, not found")
+    return 0
+
+#number of tickets available to buy
+def ticketsAvailable(serviceNum):
+    try:
+        cF = open(centralServicesFile, "r")         #open file for reading
+    except:
+        print("Error: Back office not run yet, no centralServicesFile")
+        return 0
+    lines = cF.readlines()                      #saves lines
+    cF.close()
+    for line in lines:                      
+        lineComp = line.split(" ")
+        #if this line is for the service number
+        if str(serviceNum) in lineComp[0]:
+            capacity = int(lineComp[1])
+            ticketsSold = int(lineComp[2])
+            ticketsAvailable = capacity - ticketsSold
+            return ticketsAvailable
+    print("Error: Service Number to find tickets available, not found")
     return 0
 
 
@@ -433,7 +469,7 @@ def cancelTicket():
     if numTickets < 0 or bool(re.search('[a-zA-Z]', str(numTickets))):
         print("Error: Invalid number of tickets")
         return
-    if ticketsAvailable(serviceNum)+numTickets > 30:
+    if ticketsAvailable(serviceNum)+numTickets > serviceCapacity(serviceNumber):
         print("Error: Cannot cancel more tickets than have been bought for that service")
     if user_type == 1 and ((numTickets + canceledTickets) > 20):
         print("Error: Agent can cancel a max of 20 tickets per session")

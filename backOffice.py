@@ -66,6 +66,56 @@ def checkInputService(line):
 
     return True
 
+#number of tickets sold for service
+def ticketsSold(serviceNum):
+    global pendingCentralServices
+    try:
+        cF = open(centralServicesFile, "r")         #open file for reading
+    except:
+        print("Error: Back office not run yet, no centralServicesFile")
+        return 0
+    lines = sF.readlines()                      #saves lines
+    cF.close()
+    for line in lines:                      
+        lineComp = line.split(" ")
+        #if this line is for the service number
+        if str(serviceNum) in lineComp[0]:
+            #return capacity
+            return int(lineComp[2])
+    #search pending services to be addec
+    for line in pendingCentralServices:                      
+        lineComp = line.split(" ")
+        #if this line is for the service number
+        if str(serviceNum) in lineComp[0]:
+            #return capacity
+            return int(lineComp[2])
+    print("Error: Service number used to find service ticketsSold, not found")
+    return 0
+
+def serviceCapacity(serviceNum):
+    global pendingCentralServices
+    try:
+        cF = open(centralServicesFile, "r")         #open file for reading
+    except:
+        print("Error: Back office not run yet, no centralServicesFile")
+        return 0
+    lines = sF.readlines()                      #saves lines
+    cF.close()
+    for line in lines:                      
+        lineComp = line.split(" ")
+        #if this line is for the service number
+        if str(serviceNum) in lineComp[0]:
+            #return capacity
+            return int(lineComp[1])
+    for line in pendingCentralServices:                      
+        lineComp = line.split(" ")
+        #if this line is for the service number
+        if str(serviceNum) in lineComp[0]:
+            #return capacity
+            return int(lineComp[1])
+    print("Error: Service number used to find service capacity not found")
+    return 0
+
 #When a service is asked to be removed from front end, the front end handles
 #it immediately by removing it from the physical file so it can not be used
 # later in that session. Services created are also not able to be used until the
@@ -76,18 +126,26 @@ def removeService(serviceNumber, serviceName):
     index = 0
     removedPV = False
     removedPC = False
+
+    if ticketsSold(serviceNum) > 0:
+        print("Error: Cannot delete a service with tickets sold for it")
+        return
+    for line in pendingCentralServices:
+        lineComp = line.split(" ")
+        if str(serviceNumber) in lineComp[0]:
+            if serviceName == lineComp[3]:
+                del pendingCentralServices[index]
+                removedPC = True
+            else:
+                print("Error: Cannot delete service. Service names did not match")
+        index += 1
+    index = 0
     for line in pendingValidServices:
         if str(serviceNumber) in line:
             del  pendingValidServices[index]
             removedPV = True
         index += 1
-    index = 0
-    for line in pendingCentralServices:
-        lineComp = line.split(" ")
-        if str(serviceNumber) in lineComp[0]:
-            del pendingCentralServices[index]
-            removedPC = True
-        index += 1
+    
     if removedPV and removedPC:
         print("removed the service successfully")
     elif removedPC and not removedPV:
@@ -101,14 +159,14 @@ def exchangeTickets(sourceService,destinationService,numberOfTickets):
     if( not inValidServices(sourceService) or not inValidServices(destinationService)):
         print("Error: One of the services is missing from the valid services file")
         return
-    #take tickets off source
-    modifyServiceCapacity(sourceService,int(numberOfTickets)*-1)
-    #place tickets on destination
-    modifyServiceCapacity(destinationService,numberOfTickets)
+    #reduce tickets sold for source
+    modifyTicketsSold(sourceService,int(numberOfTickets)*-1)
+    #increase tickets sold for destination
+    modifyTicketsSold(destinationService,numberOfTickets)
     return
 
 
-def modifyServiceCapacity(serviceNumber, ticketsDiff):
+def modifyTicketsSold(serviceNumber, ticketsDiff):
     cF = open(centralServicesFile, "r")         #open file for reading
     lines = sF.readlines()                      #saves lines
     cF.close()
@@ -117,13 +175,16 @@ def modifyServiceCapacity(serviceNumber, ticketsDiff):
     for line in lines:                      
         lineComp = line.split(" ")
         if str(serviceNumber) in lineComp[0]:
-            capacity = int(lineComp[1]) + ticketsDiff
-            if len(str(capacity)) == 2:
-                capacity = "00" + str(capacity)
-            elif len(str(capacity)) == 1:
-                capacity = "000" + str(capacity)
-            lineComp[1] = capacity
-            line = " ".join(lineComp)
+            if int(lineComp[2])+ticketsDiff > serviceCapacity(serviceNumber) or int(lineComp[2])+ticketsDiff < 0:
+                print("Error, invalid tickets sold value being created. Over service capcity or negative")
+            else:
+                ticketsSold = int(lineComp[2]) + ticketsDiff
+                if len(str(ticketsSold)) == 2:
+                    ticketsSold = "00" + str(ticketsSold)
+                elif len(str(ticketsSold)) == 1:
+                    ticketsSold = "000" + str(ticketsSold)
+                lineComp[2] = ticketsSold
+                line = " ".join(lineComp)
         cF.write(line)
     cF.close()
 
@@ -231,6 +292,7 @@ def writePendingServicesList():
     #open the services file with the "append" argument so older services 
     #persist in the file after logout and re-login
     #if there is a valid services file
+    print(pendingValidServices)
     if os.path.exists(validServicesFile):
         with open(validServicesFile, 'r+') as sF:
             content = sF.read()
@@ -249,62 +311,74 @@ def writePendingServicesList():
     return
 
 def writeCentralServicesList():
+    global pendingCentralServices
+    global centralServicesFile
+    print(pendingCentralServices)
+    #open the services file with the "append" argument so older services 
+    #persist in the file after logout and re-login
+    #if there is a valid services file
+    if os.path.exists(centralServicesFile):
+        with open(centralServicesFile, 'r+') as cF:
+            content = cF.read()
+            lines = content.splitlines()
+            #If there is more than just the default 00000 service number in the list
+            #add the new content above
+            if len(pendingCentralServices) > 0:
+                cF.seek(0, 0)
+                cF.write('\n'.join(pendingCentralServices) + '\n' + content)
+    else:
+        cF = open(centralServicesFile,"w+")
+        cF.write('\n'.join(pendingCentralServices))
+        cF.write('00000')
+
+    cF.close()
     return
 
 def applyTransactions(services, transactions):
+    global pendingCentralServices
+    global pendingValidServices
+
     for line in transactions:
         transaction = line.split(' ')
 
+        serviceNumber = transaction[1]
+        numberOfTickets = transaction[2]
+        destinationService = transaction[3]
+        serviceName = transaction[4]
+        serviceDate = transaction[5].split('\n')[0]
+
         if transaction[0] == 'CRE':
-
-            serviceNumber = transaction[1]
-            serviceName = transaction[4]
-            serviceDate = transaction[5].split('\n')[0]
-
+            print("Creating Service")
             # check the data to make sure its valid
             if not inValidServices(serviceNumber) and validServiceNum(serviceNumber) and validServiceName(serviceName) and validServiceDate(serviceDate):
                 pendingValidServices.append(serviceNumber)
                 pendingCentralServices.append(serviceNumber + " 0030" + " 0000" + " " + serviceName + " " + serviceDate)
 
-
         elif transaction[0] == 'DEL':
-
-            serviceNumber = transaction[1]
-            serviceName = transaction[4]
-
+            print("Deleting Service")
             #check that the data is valid
             if validServiceNum(serviceNumber) and validServiceName(serviceName):
                 removeService(serviceNumber, serviceName)
-                
-                
 
         elif transaction[0] == 'SEL':
-            sourceService = transaction[1]
-            numberOfTickets = transaction[2]
-
+            print("Selling tickets for Service")
             if validServiceNum(sourceService) and inValidServices(sourceService):
-                #negative number of tickets becuase removing number from capacity
-                modifyServiceCapacity(sourceService, int(numberOfTickets)*-1)
+                #positve value becuase adding to number of tickets sold
+                modifyTicketsSold(sourceService, int(numberOfTickets))
 
         elif transaction[0] == 'CAN':
-
-            sourceService = transaction[1]
-            numberOfTickets = transaction[2]
-
+            print("Canceling tickets Service")
             if validServiceNum(sourceService):
-                #positive number of tickets value becuase adding to capacity
-                modifyServiceCapacity(sourceService, int(numberOfTickets))
+                #negative number of tickets becuase removing from number of tickets sold
+                modifyTicketsSold(sourceService, int(numberOfTickets)*-1)
 
         elif transaction[0] == 'CHG':
-
-            sourceService = transaction[1]
-            numberOfTickets = transaction[2]
-            destinationService = transaction[3]
-
+            print("Changing tickets for Service")
             if validServiceNum(sourceService) and validServiceNum(destinationService):
                 exchangeTickets(sourceService,destinationService,numberOfTickets)
 
         elif transaction[0] == 'EOS':
+            print("End of transactions")
             pass
         else:
             print('ERROR - unrecongized transaction code: {}'.format(transaction[0]))
@@ -331,11 +405,11 @@ def main():
         applyTransactions(servicesInformation,TransactionSummaryLines)
 
         writePendingServicesList()
-        writePendingServicesList()
+        writeCentralServicesList()
 
         #so the front end can create a new one to trigger new transaction operations
         print("Back Office Work Completed")
-        time.sleep(0.5)
+        time.sleep(20)
         os.remove(summaryFile)
 
 main()
