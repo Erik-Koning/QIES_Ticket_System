@@ -127,7 +127,7 @@ def removeService(serviceNumber, serviceName):
     removedPV = False
     removedPC = False
 
-    if ticketsSold(serviceNum) > 0:
+    if ticketsSold(serviceNumber) > 0:
         print("Error: Cannot delete a service with tickets sold for it")
         return
     for line in pendingCentralServices:
@@ -154,6 +154,7 @@ def removeService(serviceNumber, serviceName):
         print("removed from the pendingValidServices file only")
     else:
         print("service not removed")
+    return
 
 def exchangeTickets(sourceService,destinationService,numberOfTickets):
     if( not inValidServices(sourceService) or not inValidServices(destinationService)):
@@ -197,22 +198,29 @@ def validServiceDate(date):
     #cretae a numeric list of the date values
     dL = [int(x) for x in str(date)]
     if dL[0] > 2 or dL[0] < 1:                                              #check illegal years (X000MMDD)
+        print("Error: Invalid Date")
         return False
     if dL[0] == 1 and (dL[1] < 9 or (dL[1] == 9 and dL[2] < 8)):            #check illegal years in 20th centry (19XXMMDD)
+        print("Error: Invalid Date")
         return False
     if dL[4] > 1 or dL[4] < 0 or (dL[4] == 1 and dL[5] > 2) or (dL[4] == 0 and dL[5] == 0):     #check illegal monthes (YYYYXXDD)
+        print("Error: Invalid Date")
         return False
     if dL[6] > 3 or dL[6] < 0 or (dL[6] == 3 and dL[7] > 1) or (dL[6] == 0 and dL[7] == 0):      #check illegal day (YYYYMMXX)
+        print("Error: Invalid Date")
         return False
     #illegal day for respective month value
     #Jan, Mar, May, July, Aug, Oct, Dec, can not have more than 31 days
     if ((dL[4] == 0 and dL[5] == 1) or (dL[4] == 0 and dL[5] == 3) or (dL[4] == 0 and dL[5] == 5) or (dL[4] == 0 and dL[5] == 7) or (dL[4] == 0 and dL[5] == 8) or (dL[4] == 1 and dL[5] == 0) or (dL[4] == 1 and dL[5] == 2)) and (dL[6] >= 3 and dL[7] > 1):
+        print("Error: Invalid Date")
         return False 
     #Apr, June, Sept, Nov, can not have more than 30 days
     if ((dL[4] == 0 and dL[5] == 4) or (dL[4] == 0 and dL[5] == 6) or (dL[4] == 0 and dL[5] == 9) or (dL[4] == 1 and dL[5] == 1)) and (dL[6] >= 3 and dL[7] > 0):
+        print("Error: Invalid Date")
         return False 
     #Feb, disregarding leap years...
     if (dL[4] == 0 and dL[5] == 2) and (dL[6] >= 2 and dL[7] > 8):
+        print("Error: Invalid Date")
         return False
     return True
 
@@ -226,14 +234,16 @@ def inValidServices(service):
             servicesFile.close()
             return True
     servicesFile.close()
+
     return False
 
 #returns true if the passed service number (as a string), 
 #is in the valid services file, false otherwise
 def validServiceNum(service):
     if service[0]=="0" or len(service) != 5 or [int(x) for x in str(service)][0] == 0:
-        return false
-    return False
+        print("Invalid service number")
+        return False
+    return True
 
 # Parameter: String service_name
 # Return: Booleam True/False
@@ -241,10 +251,8 @@ def validServiceNum(service):
 # False otherwise
 def validServiceName(service_name):
     if len(service_name) < 3 or len(service_name) >39:
+        print("Invalid service name length")
         return False
-    for aChar in service_name:
-        if ord(aChar) not in range(65, 91) and ord(aChar) not in range(97, 123) and ord(aChar) != 39:
-            return False
     return True
 
 def readServices():
@@ -353,6 +361,8 @@ def applyTransactions(services, transactions):
             if not inValidServices(serviceNumber) and validServiceNum(serviceNumber) and validServiceName(serviceName) and validServiceDate(serviceDate):
                 pendingValidServices.append(serviceNumber)
                 pendingCentralServices.append(serviceNumber + " 0030" + " 0000" + " " + serviceName + " " + serviceDate)
+            else:
+                print("Invald details for new service")
 
         elif transaction[0] == 'DEL':
             print("Deleting Service")
@@ -409,7 +419,7 @@ def main():
 
         #so the front end can create a new one to trigger new transaction operations
         print("Back Office Work Completed")
-        time.sleep(20)
+        time.sleep(2)
         os.remove(summaryFile)
 
 main()
