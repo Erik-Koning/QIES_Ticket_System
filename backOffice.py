@@ -34,18 +34,17 @@ def checkInputService(line):
         return False
 
     # {service number, service capacity, sold tickets, service name, service date}
-
     # check service number
     if (str(inputs[0])[0] == "0") or (len(inputs[0]) !=5 ):
         print('Error \n line: {} \n The service number must be between 1 and 4 decimal digits'.format(line))
         return False
 
     # check that service capacities are 1 to 4 decimal digits
-    if (len(str(inputs[2])) < 1) or (len(str(inputs[2])) > 4) or not str(inputs[2]).isdigit():
-        print('Error \n line: {} \n The number of tickets must be between 1 and 4 decimal digits'.format(line))
+    if (len(str(inputs[1])) < 1) or (len(str(inputs[1])) > 4) or not str(inputs[1]).isdigit():
+        print('Error \n line: {} \n The service capacity must be between 1 and 4 decimal digits'.format(line))
         return False
     # check service capacities is not greater than 1000
-    if int(inputs[2]) > 1000:
+    if int(inputs[1]) > 1000:
         print('Error \n line: {} \n Service Capacity must not be greater than 1000'.format(line))
         return False
     if int(inputs[1]) <= 0:
@@ -202,7 +201,7 @@ def exchangeTickets(sourceService,destinationService,numberOfTickets):
 
 def modifyTicketsSold(serviceNumber, ticketsDiff):
     cF = open(centralServicesFile, "r")         #open file for reading
-    lines = sF.readlines()                      #saves lines
+    lines = cF.readlines()                      #saves lines
     cF.close()
 
     cF = open(centralServicesFile, "w")         #open for writing
@@ -252,7 +251,7 @@ def validServiceDate(date):
         print("Error: Invalid Date day")
         return False
     #illegal day for respective month value
-    #Jan, Mar, May, July, Aug, Oct, Dec, can not have more than 31 days
+    #Jan, Mar, May, July, Aug, Oct, Dec, can not have more than 31 se
     if ((dL[4] == 0 and dL[5] == 1) or (dL[4] == 0 and dL[5] == 3) or (dL[4] == 0 and dL[5] == 5) or (dL[4] == 0 and dL[5] == 7) or (dL[4] == 0 and dL[5] == 8) or (dL[4] == 1 and dL[5] == 0) or (dL[4] == 1 and dL[5] == 2)) and (dL[6] >= 3 and dL[7] > 1):
         print("Error: Invalid Date day over month limit")
         return False 
@@ -264,7 +263,7 @@ def validServiceDate(date):
     if (dL[4] == 0 and dL[5] == 2) and (dL[6] >= 2 and dL[7] > 8):
         print("Error: Invalid Date day for leap years")
         return False
-    return True
+	return True
 
 def inValidServices(service):
     global validServicesFile
@@ -464,7 +463,7 @@ def main():
                 if os.path.isfile(summaryFile):
                     lock = False
                 b = "Waiting for frontend day to end" + "." * x
-                print(b, end="\r")
+                print(b)
                 time.sleep(0.17)
             os.system('cls||clear')
 
