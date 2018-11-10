@@ -38,7 +38,6 @@ def checkInputService(line):
     if (str(inputs[0])[0] == "0") or (len(inputs[0]) !=5 ):
         print('Error \n line: {} \n The service number must be between 1 and 4 decimal digits'.format(line))
         return False
-
     # check that service capacities are 1 to 4 decimal digits
     if (len(str(inputs[1])) < 1) or (len(str(inputs[1])) > 4) or not str(inputs[1]).isdigit():
         print('Error \n line: {} \n The service capacity must be between 1 and 4 decimal digits'.format(line))
