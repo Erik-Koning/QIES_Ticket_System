@@ -121,12 +121,12 @@ def inValidServices(service):
     service = re.sub(r"[\n\t\s]*", "", service)
     servicesFile = open(validServicesFile,"r")
     lines = servicesFile.readlines()
+    servicesFile.close()
     for line in lines:
         line = re.sub(r"[\n\t\s]*", "", line)
-        if service == line:
+        if str(service) == line:
             servicesFile.close()
             return True
-    servicesFile.close()
     return False
 
 #returns true if the passed service number (as a string), 
@@ -332,9 +332,8 @@ def createService():
     if not validServiceDate(serviceDate):
         print("Invalid service date")
         return
-
-
-
+    if inValidServices(serviceNum):
+        print("Service Number Already in services list")
 
     addToPendingServicesList(serviceNum)
     addToPendingSummaryFile("CRE", serviceNum, "xxxx", "xxxxx", serviceName, serviceDate)
@@ -379,6 +378,9 @@ def deleteService():
     if len(serviceName) < 3 or len(serviceName) > 39:
         print("Invalid service name")
         return
+    if not inValidServices(serviceNum):
+        print("Service number not a valid service")
+        return
 
     #finds the service number in the valid services file and
     #re-writes the services file without the one being removed
@@ -386,7 +388,8 @@ def deleteService():
     lines = sF.readlines()                  #saves lines
     sF.close()                                  
     sF = open(validServicesFile, "w")       #open file for writing
-    for line in lines:                      
+    for line in lines:   
+        line = re.sub(r"[\n\t\s]*", "", line)      
         if line != serviceNum:              #write line if not the one to delete
             sF.write(line)
     sF.close()

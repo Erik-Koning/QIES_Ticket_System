@@ -1,2 +1,0 @@
-DEL 10001 xxxx xxxxx qfdasdf xxxxxxxx
-EOS xxxxx xxxx xxxxx xxxxxx xxxxxxxx

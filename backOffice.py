@@ -13,6 +13,8 @@ pendingValidServices = []                       #pending valid services file
 pendingCentralServices = []
 
 def initVariables():
+    global pendingValidServices
+    global pendingCentralServices
     #clear out variables from previous operations
     pendingValidServices=[]
     pendingCentralServices=[]
@@ -34,8 +36,8 @@ def checkInputService(line):
     # {service number, service capacity, sold tickets, service name, service date}
 
     # check service number
-    if len(str(inputs[1])) != 5 or not str(inputs[1]).isdigit():
-        print('Error \n line: {} \n The service capacity must be between 1 and 4 decimal digits'.format(line))
+    if (str(inputs[0])[0] == "0") or (len(inputs[0]) !=5 ):
+        print('Error \n line: {} \n The service number must be between 1 and 4 decimal digits'.format(line))
         return False
 
     # check that service capacities are 1 to 4 decimal digits
@@ -46,12 +48,11 @@ def checkInputService(line):
     if int(inputs[2]) > 1000:
         print('Error \n line: {} \n Service Capacity must not be greater than 1000'.format(line))
         return False
-    if int(inputs[2]) <= 0:
+    if int(inputs[1]) <= 0:
         print('Error \n line: {} \n Service Capacity must not be less than or equal to 0'.format(line))
         return False
-
     # check the number of tickets sold is not greater than the service capacity
-    if int(inputs[3]) > int(inputs[2]):
+    if int(inputs[2]) > int(inputs[1]):
         print('Error \n line: {} \n The number of tickets sold cannot be greater than the service capacity'.format(line))
         return False
 
@@ -74,7 +75,7 @@ def ticketsSold(serviceNum):
     except:
         print("Error: Back office not run yet, no centralServicesFile")
         return 0
-    lines = sF.readlines()                      #saves lines
+    lines = cF.readlines()                      #saves lines
     cF.close()
     for line in lines:                      
         lineComp = line.split(" ")
@@ -117,7 +118,7 @@ def serviceCapacity(serviceNum):
     return 0
 
 #When a service is asked to be removed from front end, the front end handles
-#it immediately by removing it from the physical file so it can not be used
+# it immediately by removing it from the physical file so it can not be used
 # later in that session. Services created are also not able to be used until the
 # next login so if a service is created then removed in the same session it will only
 # exist in the pending valid services file and pending central services.
@@ -126,25 +127,55 @@ def removeService(serviceNumber, serviceName):
     index = 0
     removedPV = False
     removedPC = False
+    removedCF = False
 
     if ticketsSold(serviceNumber) > 0:
         print("Error: Cannot delete a service with tickets sold for it")
         return
     for line in pendingCentralServices:
         lineComp = line.split(" ")
-        if str(serviceNumber) in lineComp[0]:
-            if serviceName == lineComp[3]:
+        if str(serviceNumber) == lineComp[0]:
+            print("1")
+            if str(serviceName) == lineComp[3]:
+                print("2")
                 del pendingCentralServices[index]
                 removedPC = True
+                #if names match can remove from pending valid services file also
+                for pvsLine in pendingValidServices:
+                    if str(serviceNumber) in pvsLine:
+                        del  pendingValidServices[index]
+                        removedPV = True
+                    index += 1
             else:
+                #if the names did not match the service needs to be added back into the valid services file for the 
+                #front end to use. The service is delete from validServicesFile immediately by front end even if names dont
+                #match. We must add it back.
+                pendingValidServices.append(serviceNumber)
                 print("Error: Cannot delete service. Service names did not match")
         index += 1
     index = 0
-    for line in pendingValidServices:
-        if str(serviceNumber) in line:
-            del  pendingValidServices[index]
-            removedPV = True
-        index += 1
+
+    #remove from central services file
+    cF = open(centralServicesFile, "r")       #open file for reading
+    lines = cF.readlines()                  #saves lines
+    cF.close()                                  
+    cF = open(centralServicesFile, "w+")       #open file for writing
+    for line in lines:
+        lineComp = line.split(" ")                      
+        if lineComp[0] == str(serviceNumber):              #write line if not the one to delete
+            #if service name matches
+            if lineComp[3] == serviceName:
+                removedCF = True
+            else: 
+                #already removed from valid services list but names didnt match so must add it back to valid services list
+                if serviceNumber not in pendingValidServices:
+                    print("Error: Could not remove service, names did not match")
+                    pendingValidServices.append(serviceNumber)
+                cF.write(line)
+        else:
+            cF.write(line)
+    cF.close()
+
     
     if removedPV and removedPC:
         print("removed the service successfully")
@@ -152,6 +183,8 @@ def removeService(serviceNumber, serviceName):
         print("removed from the pendingCentralServices file only")
     elif removedPV and not removedPC:
         print("removed from the pendingValidServices file only")
+    elif removedCF:
+        print("removed service from central services file")
     else:
         print("service not removed")
     return
@@ -191,36 +224,45 @@ def modifyTicketsSold(serviceNumber, ticketsDiff):
 
 #returns false for all dates that are outside a valid range
 #true if a valid date
+# 1980 to 2999
 def validServiceDate(date):
     #check if the date is not the right lenght or contains a letter
-    if len(str(date)) != 8 or bool(re.search('[a-zA-Z]', str(date))):
-        return False
+    #if len(str(date)) != 8 or bool(re.search('[a-zA-Z]', str(date))):
+    #    print("Error:Invalid date string length")
+    #    return False
     #cretae a numeric list of the date values
-    dL = [int(x) for x in str(date)]
+    date = date.strip(' \t\n\r')
+    dL = list(date)
+    t = 0
+    for x in dL:
+        dL[t] = int(x)
+        t += 1
+
+
     if dL[0] > 2 or dL[0] < 1:                                              #check illegal years (X000MMDD)
-        print("Error: Invalid Date")
+        print("Error: Invalid Date year \"thousand\"")
         return False
     if dL[0] == 1 and (dL[1] < 9 or (dL[1] == 9 and dL[2] < 8)):            #check illegal years in 20th centry (19XXMMDD)
-        print("Error: Invalid Date")
+        print("Error: Invalid Date century")
         return False
     if dL[4] > 1 or dL[4] < 0 or (dL[4] == 1 and dL[5] > 2) or (dL[4] == 0 and dL[5] == 0):     #check illegal monthes (YYYYXXDD)
-        print("Error: Invalid Date")
+        print("Error: Invalid Date month")
         return False
     if dL[6] > 3 or dL[6] < 0 or (dL[6] == 3 and dL[7] > 1) or (dL[6] == 0 and dL[7] == 0):      #check illegal day (YYYYMMXX)
-        print("Error: Invalid Date")
+        print("Error: Invalid Date day")
         return False
     #illegal day for respective month value
     #Jan, Mar, May, July, Aug, Oct, Dec, can not have more than 31 days
     if ((dL[4] == 0 and dL[5] == 1) or (dL[4] == 0 and dL[5] == 3) or (dL[4] == 0 and dL[5] == 5) or (dL[4] == 0 and dL[5] == 7) or (dL[4] == 0 and dL[5] == 8) or (dL[4] == 1 and dL[5] == 0) or (dL[4] == 1 and dL[5] == 2)) and (dL[6] >= 3 and dL[7] > 1):
-        print("Error: Invalid Date")
+        print("Error: Invalid Date day over month limit")
         return False 
     #Apr, June, Sept, Nov, can not have more than 30 days
     if ((dL[4] == 0 and dL[5] == 4) or (dL[4] == 0 and dL[5] == 6) or (dL[4] == 0 and dL[5] == 9) or (dL[4] == 1 and dL[5] == 1)) and (dL[6] >= 3 and dL[7] > 0):
-        print("Error: Invalid Date")
+        print("Error: Invalid Date day for Apr, June, Sept, Nov")
         return False 
     #Feb, disregarding leap years...
     if (dL[4] == 0 and dL[5] == 2) and (dL[6] >= 2 and dL[7] > 8):
-        print("Error: Invalid Date")
+        print("Error: Invalid Date day for leap years")
         return False
     return True
 
@@ -228,19 +270,24 @@ def inValidServices(service):
     global validServicesFile
     servicesFile = open(validServicesFile,"r")
     lines = servicesFile.readlines()
+    servicesFile.close()
     for line in lines:
         line = re.sub(r"[\n\t\s]*", "", line)
-        if service == line:
+        if str(service) == str(line):
             servicesFile.close()
             return True
-    servicesFile.close()
+    return False
 
+def inPendingCentralService(service):
+    for item in pendingCentralServices:
+        if service == item.split(" ")[0]:
+            return True
     return False
 
 #returns true if the passed service number (as a string), 
 #is in the valid services file, false otherwise
 def validServiceNum(service):
-    if service[0]=="0" or len(service) != 5 or [int(x) for x in str(service)][0] == 0:
+    if str(service)[0]=="0" or len(service) != 5:
         print("Invalid service number")
         return False
     return True
@@ -300,7 +347,7 @@ def writePendingServicesList():
     #open the services file with the "append" argument so older services 
     #persist in the file after logout and re-login
     #if there is a valid services file
-    print(pendingValidServices)
+
     if os.path.exists(validServicesFile):
         with open(validServicesFile, 'r+') as sF:
             content = sF.read()
@@ -321,7 +368,6 @@ def writePendingServicesList():
 def writeCentralServicesList():
     global pendingCentralServices
     global centralServicesFile
-    print(pendingCentralServices)
     #open the services file with the "append" argument so older services 
     #persist in the file after logout and re-login
     #if there is a valid services file
@@ -359,39 +405,53 @@ def applyTransactions(services, transactions):
             print("Creating Service")
             # check the data to make sure its valid
             if not inValidServices(serviceNumber) and validServiceNum(serviceNumber) and validServiceName(serviceName) and validServiceDate(serviceDate):
-                pendingValidServices.append(serviceNumber)
-                pendingCentralServices.append(serviceNumber + " 0030" + " 0000" + " " + serviceName + " " + serviceDate)
+                if serviceNumber in pendingValidServices:
+                    print("Error: Already a valid service")
+                else:
+                    pendingValidServices.append(serviceNumber)
+                if inPendingCentralService(serviceNumber):
+                    print("Error: Already in centralServicesFile")
+                else:
+                    pendingCentralServices.append(serviceNumber + " 0030" + " 0000" + " " + serviceName + " " + serviceDate)
             else:
-                print("Invald details for new service")
+                print("Invalid details for new service")
 
         elif transaction[0] == 'DEL':
             print("Deleting Service")
             #check that the data is valid
             if validServiceNum(serviceNumber) and validServiceName(serviceName):
                 removeService(serviceNumber, serviceName)
+            else:
+                print("Error: Invalid details for service deletion")
 
         elif transaction[0] == 'SEL':
             print("Selling tickets for Service")
             if validServiceNum(sourceService) and inValidServices(sourceService):
                 #positve value becuase adding to number of tickets sold
                 modifyTicketsSold(sourceService, int(numberOfTickets))
+            else:
+                print("Error: Invalid details for service selling")
 
         elif transaction[0] == 'CAN':
             print("Canceling tickets Service")
             if validServiceNum(sourceService):
                 #negative number of tickets becuase removing from number of tickets sold
                 modifyTicketsSold(sourceService, int(numberOfTickets)*-1)
+            else:
+                print("Error: Invalid details for ticket cancel")
 
         elif transaction[0] == 'CHG':
             print("Changing tickets for Service")
             if validServiceNum(sourceService) and validServiceNum(destinationService):
                 exchangeTickets(sourceService,destinationService,numberOfTickets)
+            else:
+                print("Error: Invalid details for service deletion")
 
         elif transaction[0] == 'EOS':
             print("End of transactions")
             pass
         else:
-            print('ERROR - unrecongized transaction code: {}'.format(transaction[0]))
+            print('ERROR: unrecongized transaction code: {}'.format(transaction[0]))
 
 def main():
     while True:
