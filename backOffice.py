@@ -34,25 +34,25 @@ def checkInputService(line):
     # {service number, service capacity, sold tickets, service name, service date}
 
     # check service number'
-	if inputs[1] != 00000:
-		if len(str(inputs[1])) != 5 or not str(inputs[1]).isdigit():
-			print('Error \n line: {} \n The service capacity must be between 1 and 4 decimal digits'.format(line))
+	if inputs[0] != 00000:
+		if len(str(inputs[0])) != 5 or not str(inputs[0]).isdigit():
+			print('Error \n line: {} \n The service number must be 5 decimal digits'.format(line))
 			return False
 
     # check that service capacities are 1 to 4 decimal digits
-    if (len(str(inputs[2])) < 1) or (len(str(inputs[2])) > 4) or not str(inputs[2]).isdigit():
-        print('Error \n line: {} \n The number of tickets must be between 1 and 4 decimal digits'.format(line))
+    if (len(str(inputs[1])) < 1) or (len(str(inputs[1])) > 4) or not str(inputs[1]).isdigit():
+        print('Error \n line: {} \n The service capacity must be between 1 and 4 decimal digits'.format(line))
         return False
     # check service capacities is not greater than 1000
-    if int(inputs[2]) > 1000:
+    if int(inputs[1]) > 1000:
         print('Error \n line: {} \n Service Capacity must not be greater than 1000'.format(line))
         return False
-    if int(inputs[2]) <= 0:
+    if int(inputs[1]) <= 0:
         print('Error \n line: {} \n Service Capacity must not be less than or equal to 0'.format(line))
         return False
 
     # check the number of tickets sold is not greater than the service capacity
-    if int(inputs[3]) > int(inputs[2]):
+    if int(inputs[2]) > int(inputs[1]):
         print('Error \n line: {} \n The number of tickets sold cannot be greater than the service capacity'.format(line))
         return False
 
@@ -75,7 +75,7 @@ def ticketsSold(serviceNum):
     except:
         print("Error: Back office not run yet, no centralServicesFile")
         return 0
-    lines = sF.readlines()                      #saves lines
+    lines = cF.readlines()                      #saves lines
     cF.close()
     for line in lines:                      
         lineComp = line.split(" ")
@@ -170,7 +170,7 @@ def exchangeTickets(sourceService,destinationService,numberOfTickets):
 
 def modifyTicketsSold(serviceNumber, ticketsDiff):
     cF = open(centralServicesFile, "r")         #open file for reading
-    lines = sF.readlines()                      #saves lines
+    lines = cF.readlines()                      #saves lines
     cF.close()
 
     cF = open(centralServicesFile, "w")         #open for writing
@@ -211,7 +211,7 @@ def validServiceDate(date):
         print("Error: Invalid Date")
         return False
     #illegal day for respective month value
-    #Jan, Mar, May, July, Aug, Oct, Dec, can not have more than 31 days
+    #Jan, Mar, May, July, Aug, Oct, Dec, can not have more than 31 se
     if ((dL[4] == 0 and dL[5] == 1) or (dL[4] == 0 and dL[5] == 3) or (dL[4] == 0 and dL[5] == 5) or (dL[4] == 0 and dL[5] == 7) or (dL[4] == 0 and dL[5] == 8) or (dL[4] == 1 and dL[5] == 0) or (dL[4] == 1 and dL[5] == 2)) and (dL[6] >= 3 and dL[7] > 1):
         print("Error: Invalid Date")
         return False 
@@ -223,7 +223,7 @@ def validServiceDate(date):
     if (dL[4] == 0 and dL[5] == 2) and (dL[6] >= 2 and dL[7] > 8):
         print("Error: Invalid Date")
         return False
-    return True
+	return True
 
 def inValidServices(service):
     global validServicesFile
@@ -405,7 +405,7 @@ def main():
                 if os.path.isfile(summaryFile):
                     lock = False
                 b = "Waiting for frontend day to end" + "." * x
-                print(b, end="\r")
+                print(b)
                 time.sleep(0.17)
             os.system('cls||clear')
 
