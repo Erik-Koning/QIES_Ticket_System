@@ -33,10 +33,11 @@ def checkInputService(line):
 
     # {service number, service capacity, sold tickets, service name, service date}
 
-    # check service number
-    if len(str(inputs[1])) != 5 or not str(inputs[1]).isdigit():
-        print('Error \n line: {} \n The service capacity must be between 1 and 4 decimal digits'.format(line))
-        return False
+    # check service number'
+	if inputs[1] != 00000:
+		if len(str(inputs[1])) != 5 or not str(inputs[1]).isdigit():
+			print('Error \n line: {} \n The service capacity must be between 1 and 4 decimal digits'.format(line))
+			return False
 
     # check that service capacities are 1 to 4 decimal digits
     if (len(str(inputs[2])) < 1) or (len(str(inputs[2])) > 4) or not str(inputs[2]).isdigit():
