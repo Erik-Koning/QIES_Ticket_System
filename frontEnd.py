@@ -618,7 +618,7 @@ def main():
         # If the summaryfile exists it means the backoffice has not yet finished its work.
         # wait until no summaryFile
         while True:
-            print("QIES Backend - Team DJANGO")
+            print("QIES Frontend - Team DJANGO")
             for x in range (0,6):
                 if not os.path.isfile(summaryFile):
                     break

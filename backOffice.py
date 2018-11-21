@@ -12,6 +12,18 @@ summaryFile = "transactionSummary.txt"
 pendingValidServices = []                       #pending valid services file
 pendingCentralServices = []
 
+def printLog(fileName, contents):
+    #create file if it does exist
+    if not os.path.isfile(fileName):
+        f = open(fileName, "w")
+        f.close()
+    #open for appending to log file
+    f = open(fileName, "a")
+    f.write(contents)
+    f.close()
+    print(contents)
+    return
+
 def initVariables():
     global pendingValidServices
     global pendingCentralServices
@@ -75,7 +87,7 @@ def ticketsSold(serviceNum):
         return 0
     lines = cF.readlines()                      #saves lines
     cF.close()
-    for line in lines:                      
+    for line in lines:
         lineComp = line.split(" ")
         #if this line is for the service number
         if str(serviceNum) in lineComp[0]:
@@ -98,11 +110,12 @@ def serviceCapacity(serviceNum):
     except:
         print("Error: Back office not run yet, no centralServicesFile")
         return 0
-    lines = sF.readlines()                      #saves lines
+    lines = cF.readlines()                      #saves lines
     cF.close()
     for line in lines:                      
         lineComp = line.split(" ")
         #if this line is for the service number
+        print("servicenum in service capacity is: ", serviceNum)
         if str(serviceNum) in lineComp[0]:
             #return capacity
             return int(lineComp[1])
@@ -202,8 +215,8 @@ def modifyTicketsSold(serviceNumber, ticketsDiff):
     cF = open(centralServicesFile, "r")         #open file for reading
     lines = cF.readlines()                      #saves lines
     cF.close()
+    index = 0
 
-    cF = open(centralServicesFile, "w")         #open for writing
     for line in lines:                      
         lineComp = line.split(" ")
         if str(serviceNumber) in lineComp[0]:
@@ -217,8 +230,14 @@ def modifyTicketsSold(serviceNumber, ticketsDiff):
                     ticketsSold = "000" + str(ticketsSold)
                 lineComp[2] = ticketsSold
                 line = " ".join(lineComp)
-        cF.write(line)
+                #save the modifed line at its index
+                lines[index] = line
+        index += 1
+
+    cF = open(centralServicesFile, "w")         #open for writing
+    cF.write(lines)
     cF.close()
+    return
 
 #returns false for all dates that are outside a valid range
 #true if a valid date
@@ -393,11 +412,11 @@ def applyTransactions(services, transactions):
     for line in transactions:
         transaction = line.split(' ')
 
-        serviceNumber = transaction[1]
-        numberOfTickets = transaction[2]
-        destinationService = transaction[3]
-        serviceName = transaction[4]
-        serviceDate = transaction[5].split('\n')[0]
+        serviceNumber = transaction[1].strip(' \t\n\r')
+        numberOfTickets = transaction[2].strip(' \t\n\r')
+        destinationService = transaction[3].strip(' \t\n\r')
+        serviceName = transaction[4].strip(' \t\n\r')
+        serviceDate = transaction[5].split('\n')[0].strip(' \t\n\r')
 
         if transaction[0] == 'CRE':
             print("Creating Service")
@@ -424,24 +443,24 @@ def applyTransactions(services, transactions):
 
         elif transaction[0] == 'SEL':
             print("Selling tickets for Service")
-            if validServiceNum(sourceService) and inValidServices(sourceService):
+            if validServiceNum(serviceNumber) and inValidServices(serviceNumber):
                 #positve value becuase adding to number of tickets sold
-                modifyTicketsSold(sourceService, int(numberOfTickets))
+                modifyTicketsSold(serviceNumber, int(numberOfTickets))
             else:
                 print("Error: Invalid details for service selling")
 
         elif transaction[0] == 'CAN':
             print("Canceling tickets Service")
-            if validServiceNum(sourceService):
+            if validServiceNum(serviceNumber):
                 #negative number of tickets becuase removing from number of tickets sold
-                modifyTicketsSold(sourceService, int(numberOfTickets)*-1)
+                modifyTicketsSold(serviceNumber, int(numberOfTickets)*-1)
             else:
                 print("Error: Invalid details for ticket cancel")
 
         elif transaction[0] == 'CHG':
             print("Changing tickets for Service")
-            if validServiceNum(sourceService) and validServiceNum(destinationService):
-                exchangeTickets(sourceService,destinationService,numberOfTickets)
+            if validServiceNum(serviceNumber) and validServiceNum(destinationService):
+                exchangeTickets(serviceNumber,destinationService,numberOfTickets)
             else:
                 print("Error: Invalid details for service deletion")
 
@@ -452,6 +471,7 @@ def applyTransactions(services, transactions):
             print('ERROR: unrecongized transaction code: {}'.format(transaction[0]))
 
 def main():
+    printLog("test.txt", "hello\nTest")
     while True:
         initVariables()
         lock = True
@@ -461,7 +481,7 @@ def main():
             for x in range (0,6):
                 if os.path.isfile(summaryFile):
                     lock = False
-                b = "Waiting for backend to complete" + "." * x
+                b = "Waiting for frontend to complete" + "." * x
                 print(b, end="\r")
                 time.sleep(0.17)
             os.system('cls||clear')
