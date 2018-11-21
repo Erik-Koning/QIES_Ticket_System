@@ -262,7 +262,7 @@ def validServiceDate(date):
     if (dL[4] == 0 and dL[5] == 2) and (dL[6] >= 2 and dL[7] > 8):
         print("Error: Invalid Date day for leap years")
         return False
-	return True
+    return True
 
 def inValidServices(service):
     global validServicesFile
@@ -461,8 +461,8 @@ def main():
             for x in range (0,6):
                 if os.path.isfile(summaryFile):
                     lock = False
-                b = "Waiting for frontend day to end" + "." * x
-                print(b)
+                b = "Waiting for backend to complete" + "." * x
+                print(b, end="\r")
                 time.sleep(0.17)
             os.system('cls||clear')
 
