@@ -420,54 +420,74 @@ def applyTransactions(services, transactions):
 
         if transaction[0] == 'CRE':
             print("Creating Service")
-            # check the data to make sure its valid
+            printLog(logFile, "Creating Service ")
+	    # check the data to make sure its valid
             if not inValidServices(serviceNumber) and validServiceNum(serviceNumber) and validServiceName(serviceName) and validServiceDate(serviceDate):
                 if serviceNumber in pendingValidServices:
+                    printLog(logFile, "Error: Already a valid service")
                     print("Error: Already a valid service")
                 else:
+                    printLog(logFile, serviceNumber + " pend to valid services")
                     pendingValidServices.append(serviceNumber)
                 if inPendingCentralService(serviceNumber):
+                    printLog(logFile, "Error: Already in centralServicesFile")
                     print("Error: Already in centralServicesFile")
                 else:
+                    printLog(logFile, serviceNumber + " pend to central services")
                     pendingCentralServices.append(serviceNumber + " 0030" + " 0000" + " " + serviceName + " " + serviceDate)
             else:
+                printLog(logFile, "Invalid details for new service")
                 print("Invalid details for new service")
 
         elif transaction[0] == 'DEL':
             print("Deleting Service")
+            printLog(logFile, "Deleting Service ")
             #check that the data is valid
             if validServiceNum(serviceNumber) and validServiceName(serviceName):
+                printLog(logFile, serviceNumber + " are deleted")
                 removeService(serviceNumber, serviceName)
             else:
+                printLog(logFile, "Error: Invalid details for service deletion")
                 print("Error: Invalid details for service deletion")
 
         elif transaction[0] == 'SEL':
             print("Selling tickets for Service")
+            printLog(logFile, "Selling tickets for Service ")
             if validServiceNum(serviceNumber) and inValidServices(serviceNumber):
                 #positve value becuase adding to number of tickets sold
                 modifyTicketsSold(serviceNumber, int(numberOfTickets))
+                printLog(logFile, serviceNumber + " are sold")
             else:
+                printLog(logFile, "Error: Invalid details for service selling")
                 print("Error: Invalid details for service selling")
 
         elif transaction[0] == 'CAN':
             print("Canceling tickets Service")
+            printLog(logFile, "Canceling tickets Service ")
             if validServiceNum(serviceNumber):
                 #negative number of tickets becuase removing from number of tickets sold
                 modifyTicketsSold(serviceNumber, int(numberOfTickets)*-1)
+                printLog(logFile, serviceNumber + " are canceled")
             else:
+                printLog(logFile, "Error: Invalid details for ticket cancel")
                 print("Error: Invalid details for ticket cancel")
 
         elif transaction[0] == 'CHG':
             print("Changing tickets for Service")
+            printLog(logFile, "Changing tickets for Service ")
             if validServiceNum(serviceNumber) and validServiceNum(destinationService):
+                printLog(logFile, serviceNumber + " are changed")
                 exchangeTickets(serviceNumber,destinationService,numberOfTickets)
             else:
+                printLog(logFile, "Error: Invalid details for service deletion")
                 print("Error: Invalid details for service deletion")
 
         elif transaction[0] == 'EOS':
+            printLog(logFile, "End of transactions ")
             print("End of transactions")
             pass
         else:
+            printLog(logFile, "ERROR: unrecongized transaction code ")
             print('ERROR: unrecongized transaction code: {}'.format(transaction[0]))
 
 def main():
