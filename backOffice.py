@@ -414,6 +414,7 @@ def writeCentralServicesList():
     return
 
 #returns the name of the log file that can be writed
+# we use the testingLogFile to store the unique log file name for that testing instance.
 def getLogFile():
     global testingLogFile
     f = open(testingLogFile,"r")
