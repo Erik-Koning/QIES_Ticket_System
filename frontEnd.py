@@ -149,7 +149,7 @@ def serviceCapacity(serviceNum):
     except:
         print("Error: Back office not run yet, no centralServicesFile")
         return 0
-    lines = sF.readlines()                      #saves lines
+    lines = cF.readlines()                      #saves lines
     cF.close()
     for line in lines:                      
         lineComp = line.split(" ")
@@ -472,7 +472,7 @@ def cancelTicket():
     if numTickets < 0 or bool(re.search('[a-zA-Z]', str(numTickets))):
         print("Error: Invalid number of tickets")
         return
-    if ticketsAvailable(serviceNum)+numTickets > serviceCapacity(serviceNumber):
+    if ticketsAvailable(serviceNum)+numTickets > serviceCapacity(serviceNum):
         print("Error: Cannot cancel more tickets than have been bought for that service")
     if user_type == 1 and ((numTickets + canceledTickets) > 20):
         print("Error: Agent can cancel a max of 20 tickets per session")
