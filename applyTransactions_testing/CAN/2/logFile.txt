@@ -1,0 +1,1 @@
+Canceling tickets Service Error: Invalid details for ticket cancelEnd of transactions 
