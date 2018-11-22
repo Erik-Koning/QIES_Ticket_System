@@ -14,21 +14,6 @@ testsPath = os.getcwd() + '\\Testing'
 resultPath = os.getcwd() + '\\Outputs'
 rootDir = os.getcwd()
 
-#def writeOutputFile():
-    #file = os.getcwd() + "\\Master_Results.txt"
-    #global results
-    #results += "\n\nCorrect Test Cases: " + str(correct_tests) + "/" + str(total_tests)
-
-    #f = open(file, "w")
-    #f.write(results)
-    #f.close()
-
-#def printFiles(dir):
-    #for file in os.listdir(dir):
-    #    if os.path.isdir(dir + "/" + file):
-    #        printFiles(dir + "/" + file)
-    #    else:
-    #        printFiles(dir + "/" + file)
 def showResults():
     reportResults = open(results,"r")
     for line in reportResults:

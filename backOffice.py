@@ -7,6 +7,7 @@ import sys          #to check passed argument to program
 centralServicesFile = "centralServices.txt"
 validServicesFile = "validServices.txt"
 summaryFile = "transactionSummary.txt"
+testingLogFile = "logFileName.txt"
 
 #global lists
 pendingValidServices = []                       #pending valid services file
@@ -27,6 +28,11 @@ def printLog(fileName, contents):
 def initVariables():
     global pendingValidServices
     global pendingCentralServices
+    global testingLogFile
+
+    if not os.path.isfile(testingLogFile):
+        f = open(testingLogFile,"w")
+        f.close()
     #clear out variables from previous operations
     pendingValidServices=[]
     pendingCentralServices=[]
@@ -220,8 +226,10 @@ def modifyTicketsSold(serviceNumber, ticketsDiff):
     for line in lines:                      
         lineComp = line.split(" ")
         if str(serviceNumber) in lineComp[0]:
-            if int(lineComp[2])+ticketsDiff > serviceCapacity(serviceNumber) or int(lineComp[2])+ticketsDiff < 0:
-                print("Error, invalid tickets sold value being created. Over service capcity or negative")
+            if int(lineComp[2])+ticketsDiff > serviceCapacity(serviceNumber):
+                printLog("modifyTicketsSoldLog.txt","Error: Tickets sold makes service over capacity.")
+            elif int(lineComp[2])+ticketsDiff < 0:
+                printLog("modifyTicketsSoldLog.txt","Error: Tickets sold makes service under capacity")
             else:
                 ticketsSold = int(lineComp[2]) + ticketsDiff
                 if len(str(ticketsSold)) == 2:
@@ -405,9 +413,22 @@ def writeCentralServicesList():
     cF.close()
     return
 
+#returns the name of the log file that can be writed
+def getLogFile():
+    global testingLogFile
+    f = open(testingLogFile,"r")
+    lines = f.readlines()
+    if len(lines) == 0:
+        #no log file to write too
+        return "defaultLogFile.txt"
+    else:
+        return lines[0].strip(' \t\n\r')
+
 def applyTransactions(services, transactions):
     global pendingCentralServices
     global pendingValidServices
+
+    logFile = getLogFile()
 
     for line in transactions:
         transaction = line.split(' ')
@@ -420,27 +441,22 @@ def applyTransactions(services, transactions):
 
         if transaction[0] == 'CRE':
             print("Creating Service")
-            printLog(logFile, "Creating Service ")
 	    # check the data to make sure its valid
             if not inValidServices(serviceNumber) and validServiceNum(serviceNumber) and validServiceName(serviceName) and validServiceDate(serviceDate):
                 if serviceNumber in pendingValidServices:
                     printLog(logFile, "Error: Already a valid service")
-                    print("Error: Already a valid service")
                 else:
                     printLog(logFile, serviceNumber + " pend to valid services")
                     pendingValidServices.append(serviceNumber)
                 if inPendingCentralService(serviceNumber):
                     printLog(logFile, "Error: Already in centralServicesFile")
-                    print("Error: Already in centralServicesFile")
                 else:
                     printLog(logFile, serviceNumber + " pend to central services")
                     pendingCentralServices.append(serviceNumber + " 0030" + " 0000" + " " + serviceName + " " + serviceDate)
             else:
                 printLog(logFile, "Invalid details for new service")
-                print("Invalid details for new service")
 
         elif transaction[0] == 'DEL':
-            print("Deleting Service")
             printLog(logFile, "Deleting Service ")
             #check that the data is valid
             if validServiceNum(serviceNumber) and validServiceName(serviceName):
@@ -452,7 +468,6 @@ def applyTransactions(services, transactions):
 
         elif transaction[0] == 'SEL':
             print("Selling tickets for Service")
-            printLog(logFile, "Selling tickets for Service ")
             if validServiceNum(serviceNumber) and inValidServices(serviceNumber):
                 #positve value becuase adding to number of tickets sold
                 modifyTicketsSold(serviceNumber, int(numberOfTickets))
@@ -463,18 +478,15 @@ def applyTransactions(services, transactions):
 
         elif transaction[0] == 'CAN':
             print("Canceling tickets Service")
-            printLog(logFile, "Canceling tickets Service ")
             if validServiceNum(serviceNumber):
                 #negative number of tickets becuase removing from number of tickets sold
                 modifyTicketsSold(serviceNumber, int(numberOfTickets)*-1)
                 printLog(logFile, serviceNumber + " are canceled")
             else:
                 printLog(logFile, "Error: Invalid details for ticket cancel")
-                print("Error: Invalid details for ticket cancel")
 
         elif transaction[0] == 'CHG':
             print("Changing tickets for Service")
-            printLog(logFile, "Changing tickets for Service ")
             if validServiceNum(serviceNumber) and validServiceNum(destinationService):
                 printLog(logFile, serviceNumber + " are changed")
                 exchangeTickets(serviceNumber,destinationService,numberOfTickets)
@@ -483,7 +495,6 @@ def applyTransactions(services, transactions):
                 print("Error: Invalid details for service deletion")
 
         elif transaction[0] == 'EOS':
-            printLog(logFile, "End of transactions ")
             print("End of transactions")
             pass
         else:
@@ -491,7 +502,6 @@ def applyTransactions(services, transactions):
             print('ERROR: unrecongized transaction code: {}'.format(transaction[0]))
 
 def main():
-    printLog("test.txt", "hello\nTest")
     while True:
         initVariables()
         lock = True
