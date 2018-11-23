@@ -63,6 +63,7 @@ def test():
                                 #move summary file to end of list
                                 index = files.index("transactionSummary.txt")
                                 files.append(files.pop(index))
+                                print("running test:\n"+testingDir2)
                                 for file in files:
                                     copy2(testingDir2 + "\\" + file,rootDir)
                                     #wait a second for backend to output its stuff
@@ -73,6 +74,7 @@ def test():
                     #move summary file to end of list
                     index = files.index("transactionSummary.txt")
                     files.append(files.pop(index))
+                    print("running test:\n"+testingDir)
                     for file in files:
                         copy2(testingDir + "\\" + file,rootDir)
                         #wait a second for backend to output its stuff

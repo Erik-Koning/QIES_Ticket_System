@@ -7,7 +7,7 @@ import sys          #to check passed argument to program
 centralServicesFile = "centralServices.txt"
 validServicesFile = "validServices.txt"
 summaryFile = "transactionSummary.txt"
-testingLogFile = "logFileName.txt"
+testingLogNameFile = "logFileName.txt"
 
 #global lists
 pendingValidServices = []                       #pending valid services file
@@ -25,12 +25,18 @@ def printLog(fileName, contents):
 def initVariables():
     global pendingValidServices
     global pendingCentralServices
-    global testingLogFile
+    global testingLogNameFile
 
     #new testing log file
-    f = open(testingLogFile,"w")
+    f = open(testingLogNameFile,"r")
+    lines = f.readlines()
+    if len(lines) > 0:
+        logFile = open(lines[0].strip(' \t\n\r'),"w")
+    else:
+        logFile = open("defaultLogFile.txt","w")
+    logFile.close()
     f.close()
-    
+
     #clear out variables from previous operations
     pendingValidServices=[]
     pendingCentralServices=[]
@@ -119,7 +125,6 @@ def serviceCapacity(serviceNum):
     for line in lines:                      
         lineComp = line.split(" ")
         #if this line is for the service number
-        print("servicenum in service capacity is: ", serviceNum)
         if str(serviceNum) in lineComp[0]:
             #return capacity
             return int(lineComp[1])
@@ -225,12 +230,12 @@ def modifyTicketsSold(serviceNumber, ticketsDiff):
     for line in lines:                      
         lineComp = line.split(" ")
         if str(serviceNumber) in lineComp[0]:
-            if int(lineComp[2])+ticketsDiff > serviceCapacity(serviceNumber):
+            if int(lineComp[2])+int(ticketsDiff) > serviceCapacity(serviceNumber):
                 printLog(logFile,"Error: Tickets sold makes service over capacity.")
-            elif int(lineComp[2])+ticketsDiff < 0:
+            elif int(lineComp[2])+int(ticketsDiff) < 0:
                 printLog(logFile,"Error: Tickets sold makes service under capacity")
             else:
-                ticketsSold = int(lineComp[2]) + ticketsDiff
+                ticketsSold = int(lineComp[2]) + int(ticketsDiff)
                 if len(str(ticketsSold)) == 2:
                     ticketsSold = "00" + str(ticketsSold)
                 elif len(str(ticketsSold)) == 1:
@@ -328,26 +333,22 @@ def validServiceName(service_name):
     return True
 
 def readServices():
-    services = {}
+    services = []
     lastServiceNumber = 0  #to check that the input file has service numbers in order
     if not os.path.isfile(centralServicesFile):
         file_contents = open(centralServicesFile, 'w+')
     else:
         file_contents = open(centralServicesFile, 'r')
-    for line in file_contents:
-        verify = checkInputService(line)
-        if not verify:
-            pass
 
-        inputs = line.split(' ')
+    lines = file_contents.readlines()
+    for line in lines:
+        lineSections = line.split(' ')
+        services.append(lineSections[0])
 
-        if int(inputs[0]) < lastServiceNumber:
-            print('Warning - Input Service Number is less than last')
-            #does nothing but prints the warning
-            #TODO - maybe this needs to be a hard constraint and stop the reading
-
-        inputs[0] = int(inputs[0])
-        services[int(inputs[0])] = inputs
+    #if int(inputs[0]) < lastServiceNumber:
+    #    print('Warning - Input Service Number is less than last')
+        #does nothing but prints the warning
+        #TODO - maybe this needs to be a hard constraint and stop the reading
 
     #check that the services are in order of accending service number
     #since its a dict it doesnt have an order
@@ -414,10 +415,10 @@ def writeCentralServicesList():
     return
 
 #returns the name of the log file that can be writed
-#we use the testingLogFile to store the unique log file name for that testing instance.
+#we use the testingLogNameFile to store the unique log file name for that testing instance.
 def getLogFile():
-    global testingLogFile
-    f = open(testingLogFile,"r")
+    global testingLogNameFile
+    f = open(testingLogNameFile,"r")
     lines = f.readlines()
     if len(lines) == 0:
         #no log file to write too
@@ -490,7 +491,7 @@ def applyTransactions(services, transactions):
         elif transaction[0] == 'CHG':
             print("Changing tickets for Service")
             if validServiceNum(serviceNumber) and validServiceNum(destinationService):
-                printLog(logFile, serviceNumber + " are changed")
+                printLog(logFile, numberOfTickets + " tickets are changed for service:" + serviceNumber)
                 exchangeTickets(serviceNumber,destinationService,numberOfTickets)
             else:
                 printLog(logFile, "Error: Invalid details for service deletion")
