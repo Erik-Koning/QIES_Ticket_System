@@ -39,7 +39,6 @@ def testcase(fullPath):
 
     #move services list to root for front end to use for this test
     #This will overwrite the current valid services list
-    #**********The copy function may take too long....
     copy2(dirOfTest + "\\" + servicesList, rootDir + "\\" + "vServices.txt")
 
     #run the test case using the files

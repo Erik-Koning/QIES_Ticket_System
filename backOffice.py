@@ -14,13 +14,10 @@ pendingValidServices = []                       #pending valid services file
 pendingCentralServices = []
 
 def printLog(fileName, contents):
-    #create file if it does exist
-    if not os.path.isfile(fileName):
-        f = open(fileName, "w")
-        f.close()
     #open for appending to log file
     f = open(fileName, "a")
     f.write(contents)
+    f.write("\n")
     f.close()
     print(contents)
     return
@@ -30,9 +27,10 @@ def initVariables():
     global pendingCentralServices
     global testingLogFile
 
-    if not os.path.isfile(testingLogFile):
-        f = open(testingLogFile,"w")
-        f.close()
+    #new testing log file
+    f = open(testingLogFile,"w")
+    f.close()
+    
     #clear out variables from previous operations
     pendingValidServices=[]
     pendingCentralServices=[]
@@ -218,6 +216,7 @@ def exchangeTickets(sourceService,destinationService,numberOfTickets):
 
 
 def modifyTicketsSold(serviceNumber, ticketsDiff):
+    global logFile
     cF = open(centralServicesFile, "r")         #open file for reading
     lines = cF.readlines()                      #saves lines
     cF.close()
@@ -227,9 +226,9 @@ def modifyTicketsSold(serviceNumber, ticketsDiff):
         lineComp = line.split(" ")
         if str(serviceNumber) in lineComp[0]:
             if int(lineComp[2])+ticketsDiff > serviceCapacity(serviceNumber):
-                printLog("modifyTicketsSoldLog.txt","Error: Tickets sold makes service over capacity.")
+                printLog(logFile,"Error: Tickets sold makes service over capacity.")
             elif int(lineComp[2])+ticketsDiff < 0:
-                printLog("modifyTicketsSoldLog.txt","Error: Tickets sold makes service under capacity")
+                printLog(logFile,"Error: Tickets sold makes service under capacity")
             else:
                 ticketsSold = int(lineComp[2]) + ticketsDiff
                 if len(str(ticketsSold)) == 2:
@@ -243,7 +242,8 @@ def modifyTicketsSold(serviceNumber, ticketsDiff):
         index += 1
 
     cF = open(centralServicesFile, "w")         #open for writing
-    cF.write(lines)
+    for i in range(0,len(lines)):
+        cF.write(lines[i] + "\n")
     cF.close()
     return
 
@@ -414,7 +414,7 @@ def writeCentralServicesList():
     return
 
 #returns the name of the log file that can be writed
-# we use the testingLogFile to store the unique log file name for that testing instance.
+#we use the testingLogFile to store the unique log file name for that testing instance.
 def getLogFile():
     global testingLogFile
     f = open(testingLogFile,"r")
@@ -428,6 +428,7 @@ def getLogFile():
 def applyTransactions(services, transactions):
     global pendingCentralServices
     global pendingValidServices
+    global logFile
 
     logFile = getLogFile()
 
@@ -479,12 +480,12 @@ def applyTransactions(services, transactions):
 
         elif transaction[0] == 'CAN':
             print("Canceling tickets Service")
-            if validServiceNum(serviceNumber):
+            if validServiceNum(serviceNumber) and inValidServices(serviceNumber):
                 #negative number of tickets becuase removing from number of tickets sold
                 modifyTicketsSold(serviceNumber, int(numberOfTickets)*-1)
-                printLog(logFile, serviceNumber + " are canceled")
+                print(serviceNumber + " has " + str(numberOfTickets) +" tickets canceled")
             else:
-                printLog(logFile, "Error: Invalid details for ticket cancel")
+                printLog(logFile, "Error: Invalid service number")
 
         elif transaction[0] == 'CHG':
             print("Changing tickets for Service")

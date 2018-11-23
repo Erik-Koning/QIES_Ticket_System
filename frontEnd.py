@@ -466,20 +466,20 @@ def cancelTicket():
         numTickets = int(input("How many tickets would you like to cancel?"))
 
     #check input
-    if user_type == 1 and numTickets > 10:
-        print("Error: Agent can cancel a max of 10 tickets")
-        return
-    if numTickets < 0 or bool(re.search('[a-zA-Z]', str(numTickets))):
-        print("Error: Invalid number of tickets")
-        return
-    if ticketsAvailable(serviceNum)+numTickets > serviceCapacity(serviceNum):
-        print("Error: Cannot cancel more tickets than have been bought for that service")
-    if user_type == 1 and ((numTickets + canceledTickets) > 20):
-        print("Error: Agent can cancel a max of 20 tickets per session")
-        return
-    if not validServiceNum(serviceNum):
-        print("Error:Not a valid service number")
-        return
+    #if user_type == 1 and numTickets > 10:
+    #    print("Error: Agent can cancel a max of 10 tickets")
+    #    return
+    #if numTickets < 0 or bool(re.search('[a-zA-Z]', str(numTickets))):
+    #    print("Error: Invalid number of tickets")
+    #    return
+    #if ticketsAvailable(serviceNum)+numTickets > serviceCapacity(serviceNum):
+    #    print("Error: Cannot cancel more tickets than have been bought for that service")
+    #if user_type == 1 and ((numTickets + canceledTickets) > 20):
+    #    print("Error: Agent can cancel a max of 20 tickets per session")
+    #    return
+    #if not validServiceNum(serviceNum):
+    #    print("Error:Not a valid service number")
+    #    return
 
     canceledTickets += int(numTickets)
     
