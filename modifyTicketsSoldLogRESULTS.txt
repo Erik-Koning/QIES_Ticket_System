@@ -1,4 +1,7 @@
 Test,Result,Discription
-1,Error: Tickets sold makes service under capacity
-Error: Tickets sold makes service under capacity
-
+1,PASS
+2,PASS
+3,PASS
+4,PASS
+5,PASS
+6,PASS

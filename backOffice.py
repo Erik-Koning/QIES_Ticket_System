@@ -481,7 +481,9 @@ def applyTransactions(services, transactions):
 
         elif transaction[0] == 'CAN':
             print("Canceling tickets Service")
-            if validServiceNum(serviceNumber) and inValidServices(serviceNumber):
+            if int(numberOfTickets) < 0:
+                printLog(logFile, "Error: Cannot cancel negative tickets")
+            elif validServiceNum(serviceNumber) and inValidServices(serviceNumber):
                 #negative number of tickets becuase removing from number of tickets sold
                 modifyTicketsSold(serviceNumber, int(numberOfTickets)*-1)
                 print(serviceNumber + " has " + str(numberOfTickets) +" tickets canceled")
