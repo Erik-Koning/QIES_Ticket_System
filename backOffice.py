@@ -3,6 +3,7 @@ import os.path
 import os           #to enable folders to be made
 import re
 import sys          #to check passed argument to program
+from threading import Timer
 
 centralServicesFile = "centralServices.txt"
 validServicesFile = "validServices.txt"
@@ -507,19 +508,68 @@ def applyTransactions(services, transactions):
             print('ERROR: unrecongized transaction code: {}'.format(transaction[0]))
 
 def main():
+    global summaryFile
+    firstLoop = True
+    fileFound = False
+
     while True:
         initVariables()
+        # the lock for looping until a summary file is found
         lock = True
-        # wait animation until a transaction summary is detected
-        while lock:
-            print("QIES Backend - Team DJANGO")
-            for x in range (0,6):
-                if os.path.isfile(summaryFile):
-                    lock = False
-                b = "Waiting for frontend to complete" + "." * x
-                print(b, end="\r")
-                time.sleep(0.17)
-            os.system('cls||clear')
+
+        #asks user for what condition the backend should start at
+        if firstLoop:
+            firstLoop = False
+            #skip answer choice and default to auto start when summary file detected if timer reaches timeout period 
+            timeout = 10
+            t = Timer(timeout, print, ['Sorry, times up'])
+            t.start()
+            prompt = "This choice determines the behaviour for the remainder of this backend instance\nType \"w\" and Enter to wait to start the backend until commanded\nType any other key and Enter to automatically start when a summaryFile is detected (default after timeout)"
+            operationType = input(prompt)
+            t.cancel()
+
+        if operationType == "w":
+            #if this is a second loop and a already found a previous summary file, check to see if there is a second
+            if fileFound:
+                fileFound = False
+                for file in os.listdir('.'):
+                    #find a transactionSummary and use it as the file to use in backend processing
+                    if "transactionSummary" in file and ".txt" in file:
+                        summaryFile = file
+                        fileFound = True 
+            #havent started processing a new batch of transaction summary files yet
+            while not fileFound:
+                #wait until user says
+                startInput = input("type any key to start")
+                #search for a summary file
+                for file in os.listdir('.'):
+                    #find a transactionSummary and use it as the file to use in backend processing
+                    if "transactionSummary" in file and ".txt" in file:
+                        summaryFile = file
+                        fileFound = True
+                        break
+                if not fileFound:
+                    # The user said to run when they expected to find a summary file but there was not one
+                    print("Wanring: did not find a possible transactionSummary file")
+
+        else:
+            # This is the default behaviour if user did not choose "w"
+            # wait animation until a transaction summary is detected
+            while lock:
+                print("QIES Backend - Team DJANGO")
+                for x in range (0,6):
+                    for file in os.listdir('.'):
+                        #find a transactionSummary and use it as the file to use in backend processing
+                        if "transactionSummary" in file and ".txt" in file:
+                            summaryFile = file
+                            lock = False
+                            break
+                    if not lock:
+                        break
+                    b = "Waiting for frontend to complete" + "." * x
+                    print(b, end="\r")
+                    time.sleep(0.17)
+                os.system('cls||clear')
 
 
         TransactionSummaryLines = readTransactionFile()
@@ -532,7 +582,6 @@ def main():
 
         #so the front end can create a new one to trigger new transaction operations
         print("Back Office Work Completed")
-        time.sleep(2)
         os.remove(summaryFile)
 
 main()

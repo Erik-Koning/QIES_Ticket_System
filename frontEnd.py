@@ -5,13 +5,13 @@
 import time
 import os.path
 import os           #to enable folders to be made
-import re
+import re           #regex
 import sys          #to check passed argument to program
 
 user_type = 0 # 0 -> not loggedin | 1 -> agent | 2 -> planner
 centralServicesFile = "centralServices.txt"
 validServicesFile = "validServices.txt"         #file name for valid services file
-summaryFile = "transactionSummary.txt"          #file name for transaction summary file
+summaryFile = "transactionSummary0.txt"          #file name for transaction summary file
 pendingSummaryFile = []                         #pending transaction summary file
 canceledTickets = 0 #number of tickets an agent has canceled in the current session
 changedTickets = 0  #number of tickets an agent has changed in the current session
@@ -35,8 +35,27 @@ def addToPendingSummaryFile(transCode, sNum1, numTickets, sNum2, sName, sDate):
 def writePendingSummaryFile():
     global summaryFile
     global pendingSummaryFile
+    mostRecentVersion = None
     #opens summary file with argument "w+" so a blank summaryFile is created 
-    #if it already exists it is overwritten with a blank one
+    #search for the largest version of the transaction summary file
+    #must re-search everytime a front end has to print becuase parallel instances of the front end may be running
+    for file in os.listdir('.'):
+        #find a transactionSummary and use it as the file to use in backend processing
+        if "transactionSummary" in file and ".txt" in file:
+            numbersFound = re.findall(r'\d+', file)
+            if len(numbersFound) == 1:
+                if mostRecentVersion == None:
+                    mostRecentVersion = int(numbersFound[0])
+                elif int(numbersFound[0]) > mostRecentVersion:
+                    mostRecentVersion = int(numbersFound[0])
+            elif len(numbersFound) > 1:
+                print("Error: more than two numbers found in an existing summary file name")
+    
+    #create new summary file name if an already existing one was found
+    if not(mostRecentVersion == None):
+        summaryFile = "transactionSummary" + str(mostRecentVersion + 1) + ".txt"
+    else:
+        summaryFile = "transactionSummary" + "0" + ".txt"
     sF = open(summaryFile,"w+")
     sF.write('\n'.join(pendingSummaryFile))
     sF.close()
@@ -617,17 +636,17 @@ def main():
 
         # If the summaryfile exists it means the backoffice has not yet finished its work.
         # wait until no summaryFile
-        while True:
-            print("QIES Frontend - Team DJANGO")
-            for x in range (0,6):
-                if not os.path.isfile(summaryFile):
-                    break
-                b = "Waiting for backend to complete" + "." * x
-                print(b, end="\r")
-                time.sleep(0.17)
-            os.system('cls||clear')
-            if not os.path.isfile(summaryFile):
-                break
+        #while True:
+        #    print("QIES Frontend - Team DJANGO")
+        #    for x in range (0,6):
+        #        if not os.path.isfile(summaryFile):
+        #            break
+        #        b = "Waiting for backend to complete" + "." * x
+        #        print(b, end="\r")
+        #        time.sleep(0.17)
+        #    os.system('cls||clear')
+        #    if not os.path.isfile(summaryFile):
+        #        break
 
         print("QIES Backend - Team DJANGO\nWhat would you like to do?")
         if (not testMode):
