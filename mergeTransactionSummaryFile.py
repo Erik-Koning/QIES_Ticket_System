@@ -2,7 +2,7 @@ import os
 import os.path
 from os import walk
 
-rootDir = os.getcwd()
+#rootDir = os.getcwd()
 
 def getTransactionSummaryFileArray():
     toReturn = []
@@ -14,12 +14,12 @@ def getTransactionSummaryFileArray():
     return toReturn
     
 
-def main():
-    global rootDir
+def mergeTransactionSummaryFiles(rootDir):
+    #global rootDir
     filenames = getTransactionSummaryFileArray()
     with open(rootDir + '\\dailyTransactionSummaryFile.txt', 'w') as outfile:
         for fname in filenames:
             with open(fname) as infile:
                 outfile.write(infile.read())
 
-main()
+mergeTransactionSummaryFiles(os.getcwd())
