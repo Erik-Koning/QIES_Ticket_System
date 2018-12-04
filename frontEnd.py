@@ -7,6 +7,7 @@ import os.path
 import os           #to enable folders to be made
 import re           #regex
 import sys          #to check passed argument to program
+from mergeTransactionSummaryFile import getTransactionSummaryFileArray, mergeTransactionSummaryFiles
 
 user_type = 0 # 0 -> not loggedin | 1 -> agent | 2 -> planner
 centralServicesFile = "centralServices.txt"
@@ -59,6 +60,10 @@ def writePendingSummaryFile():
     sF = open(summaryFile,"w+")
     sF.write('\n'.join(pendingSummaryFile))
     sF.close()
+
+    #merge transaction summary file
+    mergeTransactionSummaryFiles(os.getcwd())
+    
     return
 
 #writes the pending summary text file
