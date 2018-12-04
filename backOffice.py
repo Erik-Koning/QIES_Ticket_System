@@ -7,7 +7,7 @@ from threading import Timer
 
 centralServicesFile = "centralServices.txt"
 validServicesFile = "validServices.txt"
-summaryFile = "transactionSummary.txt"
+summaryFile = "dailyTransactionSummaryFile.txt"
 testingLogNameFile = "logFileName.txt"
 
 #global lists
@@ -502,7 +502,7 @@ def applyTransactions(services, transactions):
 
         elif transaction[0] == 'EOS':
             print("End of transactions")
-            pass
+            #pass
         else:
             printLog(logFile, "ERROR: unrecongized transaction code ")
             print('ERROR: unrecongized transaction code: {}'.format(transaction[0]))
@@ -534,7 +534,7 @@ def main():
                 fileFound = False
                 for file in os.listdir('.'):
                     #find a transactionSummary and use it as the file to use in backend processing
-                    if "transactionSummary" in file and ".txt" in file:
+                    if "dailyTransactionSummary" in file and ".txt" in file:
                         summaryFile = file
                         fileFound = True 
             #havent started processing a new batch of transaction summary files yet
@@ -544,7 +544,7 @@ def main():
                 #search for a summary file
                 for file in os.listdir('.'):
                     #find a transactionSummary and use it as the file to use in backend processing
-                    if "transactionSummary" in file and ".txt" in file:
+                    if "dailyTransactionSummary" in file and ".txt" in file:
                         summaryFile = file
                         fileFound = True
                         break
@@ -560,7 +560,7 @@ def main():
                 for x in range (0,6):
                     for file in os.listdir('.'):
                         #find a transactionSummary and use it as the file to use in backend processing
-                        if "transactionSummary" in file and ".txt" in file:
+                        if "dailyTransactionSummary" in file and ".txt" in file:
                             summaryFile = file
                             lock = False
                             break
