@@ -20,6 +20,6 @@ def mergeTransactionSummaryFiles(rootDir):
     with open(rootDir + '\\dailyTransactionSummaryFile.txt', 'w') as outfile:
         for fname in filenames:
             with open(fname) as infile:
-                outfile.write(infile.read())
+                outfile.write(infile.read() + '\n')
 
 mergeTransactionSummaryFiles(os.getcwd())
